@@ -277,10 +277,12 @@ class VmessBackend:
         return user
     
     def delete_user(self, user_info):
+        profile = Loader().profile
         if self.user_exists(user_info):
-            profile_list = str(Loader().profile).replace(",").split("\n\n")[::2]
+            profile_str = str(profile)
+            profile_list = profile_str.replace(",").split("\n\n")[::2]
             user_item = self.search_list(profile_list, user_info)
-            group = Loader().profile.group_list[0]
+            group = profile.group_list[0]
             client_index = int(user_item[0])
             nw = NodeWriter()
             nw.del_user(group, client_index)
