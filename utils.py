@@ -5,7 +5,6 @@ import sys, hashlib, shutil, subprocess, shlex
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from collections import deque
-from utils import random_str
 from models import TrojanUsers, TrojanBase
 
 
