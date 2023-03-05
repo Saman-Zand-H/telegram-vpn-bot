@@ -139,7 +139,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await sync_to_async(vmess.new_user)(username)
                 await update.message.reply_text("Creating Vmess Account...")
                 await update.message.reply_chat_action("typing")
-                await sleep(5)
+                await sleep(3)
             
             else:
                 if datetime.now().date() - guest.started_at >= timedelta(days=30):
@@ -162,6 +162,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(
                 generate_trojan_str(password)
             )
+            vmess = VmessBackend()
             await update.message.reply_text(
                 vmess.generate_link(username, "whiteelli.tk", 443)
             )
