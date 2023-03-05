@@ -278,12 +278,13 @@ class VmessBackend:
     
     def delete_user(self, user_info):
         profile = Loader().profile
-        if self.user_exists(user_info):
-            profile_str = str(profile)
-            profile_list = profile_str.replace(",", "").split("\n\n")[::2]
-            user_item = self.search_list(profile_list, user_info)
+        if (user:=self.user_exists(user_info)):
+            user_number = user["node"].user_number
             group = profile.group_list[0]
-            client_index = int(user_item[0])
+            for index, node in enumerate(group.node_list):
+                if node.user_number == user_number:
+                    client_index = index
+                    break
             nw = NodeWriter()
             nw.del_user(group, client_index)
 
