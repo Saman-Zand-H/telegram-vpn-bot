@@ -159,7 +159,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(
                 generate_trojan_str(password)
             )
-            sleep(3)
+            await sleep(3)
             await update.message.reply_text(
                 vmess.generate_link(username, "whiteelli.tk", 443)
             )
