@@ -216,6 +216,7 @@ class VmessBackend:
             {
                 "user_info": node.user_info,
                 "password": node.password,
+                "node": node
             }
             for i, node in self._retrieve_nodes()
         ]
