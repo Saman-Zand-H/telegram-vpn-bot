@@ -202,7 +202,7 @@ class VmessBackend:
         ]
         nodes.sort(key=lambda i: i.user_info)
         grouped = [
-            (user_info, list(node))
+            (user_info, list(node)[0])
             for user_info, node in groupby(nodes, attrgetter("user_info"))
         ]
         return grouped
