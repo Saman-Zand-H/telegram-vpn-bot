@@ -30,6 +30,7 @@ bot_name = "vpn_bot only"
 DB_PATH = "/root/telbot/data.db"
 DOMAINS = ["whitelli.tk", "blackelli.duckdns.org"]
 engine = create_engine(f"sqlite+pysqlite:///{DB_PATH}", echo=True)
+Session = sessionmaker(bind=engine)
 AUTH, GUEST_MENU, PRO, PRO_MENU = map(chr, range(4))
 LOGIN, GUEST = map(chr, range(4, 6))
 PROTOCOL, CONF_TYPE, START = map(chr, range(6, 9))
@@ -105,7 +106,6 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await update.message.reply_text(reply_text, reply_markup=auth_markup)
         return AUTH
-    Session = sessionmaker(bind=engine)
     results = Session().query(Users).filter(Users.login_code==login_code)
     if results.count() != 0:
         results.all().update({Users.is_authenticated: True})
@@ -122,7 +122,6 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
     match update.message.text.lower():
         case "free server":
-            Session = sessionmaker(bind=engine)
             tr = TrojanDatabase()
             guest_qs = Session().query(Guests).filter(Guests.username==username)
             
@@ -166,11 +165,9 @@ async def pro(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def pro_menu(update: Update, context:ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
-    Session = sessionmaker(bind=engine)
     user = Session().query(Users).filter(Users.username==username).first()
     match update.message.text.lower():
         case "logout":
-            Session = sessionmaker(bind=engine)
             (
                 Session()
                 .query(Users)
@@ -180,7 +177,6 @@ async def pro_menu(update: Update, context:ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("You are logged out now.")
             return AUTH
         case "list servers":
-            Session = sessionmaker(bind=engine)
             services = [*(
                 Session()
                 .query(Offers)
@@ -284,7 +280,6 @@ async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
                             )
                         )
             elif pref_protocol in ["vmess", "vless"]:
-                Session = sessionmaker(bind=engine)
                 result = Session().query(V2Ray).filter(V2Ray.username==username,
                                                        V2Ray.protocol==pref_protocol).first()
                 await update.message.reply_text(result.link)

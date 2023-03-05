@@ -50,6 +50,7 @@ class TrojanDatabase:
     def _prepare_db(self, host, user, database, password, port):
         self.engine = create_engine(
             f"mysql+mysqlclient://{user}:{password}@{host}:{port}/{database}")
+        self.Session = sessionmaker(bind=self.engine)
         TrojanBase.metadata.create_all(self.engine)
 
     def _create_user(self, username, password, quota, description):
@@ -69,9 +70,8 @@ class TrojanDatabase:
         quota = int(quota)
         logger.info("[*] creating database records...")
         passwords = [prefix + random_str(10) for _ in range(count)]
-        Session = sessionmaker(bind=self.engine)
         for i in range(count):
-            Session().bulk_save_objects(
+            self.Session().bulk_save_objects(
                 [
                     TrojanUsers(
                         username=prefix+random_str(5),
@@ -81,7 +81,7 @@ class TrojanDatabase:
                     )
                 ]
             )
-        Session().commit()
+        self.Session().commit()
         return passwords
 
     def _trojan_exists(self):
@@ -154,10 +154,9 @@ class TrojanDatabase:
         return passwords
 
     def retrieve(self, lookup_field, lookup_value):
-        Session = sessionmaker(bind=self.engine)
         try:
             return (
-                Session()
+                self.Session()
                 .query(TrojanUsers)
                 .filter(eval(f"TrojanUsers.{lookup_field}")==lookup_value)
             ).all()
@@ -169,9 +168,8 @@ class TrojanDatabase:
         
     def update_data(self, table_name, lookup_field, lookup_value, field, value):
         try:
-            Session = sessionmaker(bind=self.engine)
             (
-                Session()
+                self.Session()
                 .query(TrojanUsers)
                 .filter(eval(f"TrojanUsers.{lookup_field}")==lookup_value)
                 .update({field: value})
