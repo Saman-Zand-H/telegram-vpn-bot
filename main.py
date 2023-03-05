@@ -99,7 +99,9 @@ async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return GUEST_MENU
         case "clients":
+            await update.message.reply_chat_action("upload_document")
             await update.message.reply_document("/root/telbot/HTTPInjector5.9.1.apk")
+            await update.message.reply_chat_action("upload_document")
             await update.message.reply_document("/root/telbot/NapsternetV53.0.0.apk")
             reply_text = (
                 f"Hi {update.effective_user.first_name}! My name is {bot_name}. "
