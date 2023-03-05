@@ -126,6 +126,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     match update.message.text.lower():
         case "free server":
             tr = TrojanBackend()
+            vmess = VmessBackend()
             guest_qs = Session().query(Guests).filter(Guests.username==username)
             
             if guest_qs.count() == 0:
@@ -134,26 +135,32 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await sync_to_async(tr.create_user)(
                     username, (password := generate_password(username)), quota=10**9
                 )
-                await update.message.reply_text(
-                    "Note that newly created accounts will be "
-                    "activated in about 30seconds."
-                )
-                await update.message.reply_text(
-                    "Copy this URL and paste it into your client:\n"
-                )
-                await update.message.reply_text(
-                    generate_trojan_str(password)
-                )
-                
-            else:
-                guest = guest_qs.first()
-                
-            if datetime.now().date() - guest.started_at >= timedelta(days=30):
-                quota = tr.retrieve("users", "username", username)
-                await sync_to_async(tr.update_data)(
-                    "users", "username", username, "quota", quota[0][3] + 10**6
-                )
+                await sync_to_async(vmess.new_user)(username)
             
+            else:
+                if datetime.now().date() - guest.started_at >= timedelta(days=30):
+                    quota = tr.retrieve("users", "username", username)
+                    await sync_to_async(tr.update_data)(
+                        "users", "username", username, "quota", quota[0][3] + 10**6
+                    )
+                
+                vmess_traffic = vmess.usage(username)["total"]
+                if vmess_traffic > 10**9:
+                    vmess.delete_user(username)
+                        
+            await update.message.reply_text(
+                "Note that newly created accounts will be "
+                "activated in about 30seconds."
+            )
+            await update.message.reply_text(
+                "Copy these URLs and paste them into your client:\n"
+            )
+            await update.message.reply_text(
+                generate_trojan_str(password)
+            )
+            await update.message.reply_text(
+                vmess.generate_link(username, "whiteelli.tk", 443)
+            )
         case "back":
             pass
     

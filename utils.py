@@ -6,9 +6,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from collections import deque
 from models import TrojanUsers, TrojanBase
-from v2ray_util.global_setting.stats_ctr import Loader
+from v2ray_util.global_setting.stats_ctr import Loader, StatsFactory
 from v2ray_util.util_core.writer import NodeWriter
-from v2ray_util.util_core.selector import GroupSelector
+from v2ray_util.util_core.selector import GroupSelector, ClientSelector
 from itertools import chain, groupby
 from operator import attrgetter
 
@@ -224,8 +224,11 @@ class VmessBackend:
 
     def user_exists(self, identifier):
         users = self.list_users()
-        results = self.search_list_of_dicts(users, identifier)
-        return results
+        try:
+            results = self.search_list_of_dicts(users, identifier)
+            return results
+        except StopIteration:
+            return
 
     def _link(self, node, domain, port):
         json_dict = {
@@ -247,14 +250,37 @@ class VmessBackend:
             bytes.decode(base64.b64encode(bytes(json_data, "utf-8")))
         )
         return result_link
+    
+    def usage(self, user_info):
+        usage = {"download": 0, "upload": 0, "total": 0}
+        if self.user_exists(user_info):
+            sf = StatsFactory(Loader().profile.stats.door_port)
+            sf.get_stats(user_info, False)
+            usage.update({
+                "download": sf.downlink_value,
+                "upload": sf.uplink_value,
+                "total": sf.uplink_value+sf.downlink_value
+            })
+        return usage
 
     def new_user(self, user_info):
-        gs = GroupSelector("add user")
-        group = gs.group
-        nw = NodeWriter(group.tag, group.index)
-        info = {"email": user_info}
-        nw.create_new_user(**info)
-        return True
+        if not (user:=self.user_exists(user_info)):
+            gs = GroupSelector("add user")
+            group = gs.group
+            nw = NodeWriter(group.tag, group.index)
+            info = {"email": user_info}
+            nw.create_new_user(**info)
+            return True
+        return user
+    
+    def delete_user(self, user_info):
+        cs = ClientSelector("del user")
+        group = cs.group
+        
+        if group is not None and (user:=self.user_exists(user_info)):
+            client_index = user["node"].user_number
+            nw = NodeWriter()
+            nw.del_user(group, client_index)
 
     def generate_link(self, name, domain, port):
         if not self.user_exists(name):
