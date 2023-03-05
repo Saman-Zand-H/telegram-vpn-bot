@@ -261,7 +261,7 @@ class VmessBackend:
         return password
 
     def generate_link(self, name, domain, port):
-        if not self.list_users(name):
+        if not self.user_exists(name):
             return
         nodes = self._retrieve_nodes()
         result = self._search_list_of_lists(nodes, name)
