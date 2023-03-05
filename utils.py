@@ -9,8 +9,7 @@ from models import TrojanUsers, TrojanBase
 from v2ray_util.global_setting.stats_ctr import Loader, StatsFactory
 from v2ray_util.util_core.group import Trojan, Vmess, Vless, Mtproto, Socks
 from v2ray_util.util_core.writer import NodeWriter
-from v2ray_util.util_core.selector import GroupSelector, CommonSelector
-from v2ray_util.util_core.utils import is_email, random_email, xtls_flow
+from v2ray_util.util_core.selector import GroupSelector
 from itertools import chain, groupby
 from operator import attrgetter
 
@@ -78,7 +77,7 @@ class TrojanBackend:
         count = int(count)
         quota = int(quota)
         logger.info("[*] creating database records...")
-        passwords = [prefix + random_str(10) for _ in range(count)]
+        passwords = [prefix + random_str(10) for i in range(count)]
         for i in range(count):
             self.Session().bulk_save_objects(
                 [
@@ -219,7 +218,7 @@ class VmessBackend:
                 "user_info": node.user_info,
                 "password": node.password,
             }
-            for _, node in self._retrieve_nodes()
+            for i, node in self._retrieve_nodes()
         ]
         return users_info
 
