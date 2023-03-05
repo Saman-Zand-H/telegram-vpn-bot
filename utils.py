@@ -210,6 +210,9 @@ class VmessBackend:
 
     def search_list_of_lists(self, list_of_lists: List[List], val):
         return next((l for l in list_of_lists if val in l))
+    
+    def search_list(self, list, val):
+        return next((i for i in list if val in i))
 
     def list_users(self):
         users_info = [
@@ -274,11 +277,11 @@ class VmessBackend:
         return user
     
     def delete_user(self, user_info):
-        cs = ClientSelector("del user")
-        group = cs.group
-        
-        if group is not None and (user:=self.user_exists(user_info)):
-            client_index = user["node"].user_number
+        if self.user_exists(user_info):
+            profile_list = str(Loader().profile).replace(",").split("\n\n")[::2]
+            user_item = self.search_list(profile_list, user_info)
+            group = Loader().profile.group_list[0]
+            client_index = int(user_item[0])
             nw = NodeWriter()
             nw.del_user(group, client_index)
 
