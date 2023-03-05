@@ -48,7 +48,7 @@ class TrojanDatabase:
 
     def _prepare_db(self, host, user, database, password, port):
         self.engine = create_engine(
-            f"mysql+mysqlclient://{user}:{password}@{host}:{port}/{database}")
+            f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}")
         self.Session = sessionmaker(bind=self.engine)
         TrojanBase.metadata.create_all(self.engine)
 
