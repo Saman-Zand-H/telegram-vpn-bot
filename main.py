@@ -98,6 +98,16 @@ async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 ),
             )
             return GUEST_MENU
+        case "clients":
+            await update.message.reply_document("/root/telbot/HTTPInjector5.9.1.apk")
+            await update.message.reply_document("/root/telbot/NapsternetV53.0.0.apk")
+            reply_text = (
+                f"Hi {update.effective_user.first_name}! My name is {bot_name}. "
+                "You can either buy a pro account by contacting @admin, and use it, "
+                "or you can use our free server with a limited quota of 1gb per month."
+            )
+            await update.message.reply_text(reply_text, reply_markup=auth_markup)
+            return START
 
 
 async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
