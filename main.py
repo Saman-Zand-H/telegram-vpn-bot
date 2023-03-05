@@ -10,7 +10,7 @@ from models import (Base,
                     V2Ray)
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from utils import generate_trojan_str, generate_password, TrojanDatabase
+from utils import generate_trojan_str, generate_password, TrojanBackend
 from telegram import (Update, 
                       ReplyKeyboardMarkup)
 from telegram.ext import (
@@ -122,7 +122,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
     match update.message.text.lower():
         case "free server":
-            tr = TrojanDatabase()
+            tr = TrojanBackend()
             guest_qs = Session().query(Guests).filter(Guests.username==username)
             
             if guest_qs.count() == 0:
@@ -266,7 +266,7 @@ async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
         case "url":
             if pref_protocol == "trojan":
                 password = generate_password(username)
-                tr = TrojanDatabase()
+                tr = TrojanBackend()
                 tr.create_user(
                     username=username,
                     password=password,
