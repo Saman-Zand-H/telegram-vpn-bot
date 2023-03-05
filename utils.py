@@ -6,8 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from collections import deque
 from models import TrojanUsers, TrojanBase
-from v2ray_util.global_setting.stats_ctr import Loader, StatsFactory
-from v2ray_util.util_core.group import Trojan, Vmess, Vless, Mtproto, Socks
+from v2ray_util.global_setting.stats_ctr import Loader
 from v2ray_util.util_core.writer import NodeWriter
 from v2ray_util.util_core.selector import GroupSelector
 from itertools import chain, groupby
@@ -206,10 +205,10 @@ class VmessBackend:
         ]
         return grouped
 
-    def _search_list_of_dicts(self, list_of_dicts: List[dict], val):
+    def search_list_of_dicts(self, list_of_dicts: List[dict], val):
         return next((d for d in list_of_dicts if val in d.values()))
 
-    def _search_list_of_lists(self, list_of_lists: List[List], val):
+    def search_list_of_lists(self, list_of_lists: List[List], val):
         return next((l for l in list_of_lists if val in l))
 
     def list_users(self):
@@ -224,7 +223,7 @@ class VmessBackend:
 
     def user_exists(self, identifier):
         users = self.list_users()
-        results = self._search_list_of_dicts(users, identifier)
+        results = self.search_list_of_dicts(users, identifier)
         return bool(results)
 
     def _link(self, node, domain, port):
@@ -254,14 +253,11 @@ class VmessBackend:
         nw = NodeWriter(group.tag, group.index)
         info = {"email": user_info}
         nw.create_new_user(**info)
-        password = self._search_list_of_lists(self._retrieve_nodes(), user_info)[
-            1
-        ].password
-        return password
+        return True
 
     def generate_link(self, name, domain, port):
         if not self.user_exists(name):
             return
         nodes = self._retrieve_nodes()
-        result = self._search_list_of_lists(nodes, name)
+        result = self.search_list_of_lists(nodes, name)
         return self._link(result[1], domain, port)

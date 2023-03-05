@@ -10,7 +10,10 @@ from models import (Base,
                     V2Ray)
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from utils import generate_trojan_str, generate_password, TrojanBackend
+from utils import (generate_trojan_str, 
+                   generate_password, 
+                   TrojanBackend, 
+                   VmessBackend)
 from telegram import (Update, 
                       ReplyKeyboardMarkup)
 from telegram.ext import (
@@ -127,6 +130,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             if guest_qs.count() == 0:
                 guest = Guests(username=username, started_at=datetime.now().date())
+                
                 await sync_to_async(tr.create_user)(
                     username, (password := generate_password(username)), quota=10**9
                 )
@@ -140,6 +144,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text(
                     generate_trojan_str(password)
                 )
+                
             else:
                 guest = guest_qs.first()
                 
