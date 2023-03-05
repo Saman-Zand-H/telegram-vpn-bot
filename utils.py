@@ -224,7 +224,7 @@ class VmessBackend:
     def user_exists(self, identifier):
         users = self.list_users()
         results = self.search_list_of_dicts(users, identifier)
-        return bool(results)
+        return results
 
     def _link(self, node, domain, port):
         json_dict = {
