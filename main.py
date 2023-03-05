@@ -8,6 +8,7 @@ from models import (Base,
                     Guests, 
                     UsersOffersLink, 
                     V2Ray)
+from asyncio import sleep
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from utils import (generate_trojan_str, 
@@ -158,6 +159,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(
                 generate_trojan_str(password)
             )
+            sleep(3)
             await update.message.reply_text(
                 vmess.generate_link(username, "whiteelli.tk", 443)
             )
