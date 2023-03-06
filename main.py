@@ -54,7 +54,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     Session = sessionmaker(bind=engine)()
     username = update.effective_user.username
     user = Session.query(Users).filter(Users.username==username)
-    if user.exists() and user.first().is_authenticated:
+    if user.scalar() and user.first().is_authenticated:
         return PRO
     reply_text = (
         f"Hi {update.effective_user.first_name}! My name is {bot_name}. "
@@ -71,7 +71,7 @@ async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
     user = Session.query(Users).filter(Users.username==username)
     
-    if user.exists() and user.first().is_authenticated:
+    if user.scalar() and user.first().is_authenticated:
         return PRO
     
     match answer:
@@ -114,7 +114,7 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
     user = Session.query(Users).filter(Users.username==username)
     
-    if user.exists() and user.first().is_authenticated:
+    if user.scalar() and user.first().is_authenticated:
         return PRO
     
     if login_code.lower() == "cancel":
