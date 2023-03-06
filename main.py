@@ -291,7 +291,8 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_chat_action("typing")
 
                 await update.message.reply_text(
-                    f"Dear {name}, your usage ever since {updated_at} is as following:"
+                    f"Dear {name}, your quota is {trunc_number(user.quota)}b, "
+                    f"and your usage ever since {updated_at} is as following:"
                 )
 
                 vmess_usage_str = (

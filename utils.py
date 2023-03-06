@@ -374,7 +374,7 @@ class UsersBackend:
         if not (user:=self.user_exists(username)):
             password = random_str(10)
             offers = [
-                self.Session.query(Offers).filter(Offers.id==id).all()[0]
+                self.Session.query(Offers).filter(Offers.id==offer).all()[0]
                 for offer in offers
             ]
             user = Users(
