@@ -231,6 +231,7 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
     Session = sessionmaker(bind=engine)()
     user = Session.query(Users).filter(Users.username == username).first()
+    print("before")
     match update.message.text.lower():
         case "logout":
             (
@@ -269,6 +270,7 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return PROTOCOL
 
         case "account status":
+            print("not yet.")
             return ACCOUNT_STATS
 
 
@@ -389,6 +391,7 @@ async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @login_required
 async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print("called")
     username = update.effective_user.username
     Session = sessionmaker(bind=engine)()
     name = update.effective_user.first_name
