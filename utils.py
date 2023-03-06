@@ -75,7 +75,7 @@ class TrojanBackend:
         self.engine = create_engine(
             f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
         )
-        self.Session = sessionmaker(bind=self.engine)
+        self.Session = sessionmaker(bind=self.engine)()
         TrojanBase.metadata.create_all(self.engine)
 
     def _create_user(self, username, password, quota, description):
@@ -87,8 +87,8 @@ class TrojanBackend:
             quota=quota,
             description=description,
         )
-        self.Session().add(user)
-        self.Session().commit()
+        self.Session.add(user)
+        self.Session.commit()
 
     def _create_random_users(self, count, prefix, quota, description):
         if description is None:
@@ -98,7 +98,7 @@ class TrojanBackend:
         logger.info("[*] creating database records...")
         passwords = [prefix + random_str(10) for i in range(count)]
         for i in range(count):
-            self.Session().bulk_save_objects(
+            self.Session.bulk_save_objects(
                 [
                     TrojanUsers(
                         username=prefix + random_str(5),
@@ -108,7 +108,7 @@ class TrojanBackend:
                     )
                 ]
             )
-        self.Session().commit()
+        self.Session.commit()
         return passwords
 
     def _trojan_exists(self):
@@ -183,7 +183,7 @@ class TrojanBackend:
     def retrieve(self, lookup_field, lookup_value):
         try:
             return (
-                self.Session()
+                self.Session
                 .query(TrojanUsers)
                 .filter(eval(f"TrojanUsers.{lookup_field}") == lookup_value)
             ).all()
@@ -197,7 +197,7 @@ class TrojanBackend:
     def update_data(self, table_name, lookup_field, lookup_value, field, value):
         try:
             (
-                self.Session()
+                self.Session
                 .query(TrojanUsers)
                 .filter(eval(f"TrojanUsers.{lookup_field}") == lookup_value)
                 .update({field: value})
@@ -208,7 +208,7 @@ class TrojanBackend:
 
     def user_exists(self, username):
         return bool(
-            self.Session()
+            self.Session
             .query(TrojanUsers)
             .filter(TrojanUsers.username==username)
             .count()
@@ -218,7 +218,7 @@ class TrojanBackend:
         usage = {"download": 0, "upload": 0, "total": 0}
         if self.user_exists(username):
             data = (
-                self.Session()
+                self.Session
                 .query(TrojanUsers)
                 .filter(TrojanUsers.username==username)
                 .first()
@@ -343,10 +343,10 @@ class VmessBackend:
 class UsersBackend:
     def __init__(self):
         self.engine = create_engine(f"sqlite+pysqlite:///root/telbot/data.db")
-        self.Session = sessionmaker(bind=self.engine)
+        self.Session = sessionmaker(bind=self.engine)()
             
     def user_exists(self, username):
-        return self.Session().query(Users).filter(Users.username==username).all()
+        return self.Session.query(Users).filter(Users.username==username).all()
             
     def new_user(self, 
                  username, 
@@ -364,8 +364,8 @@ class UsersBackend:
         )
         for offer in offers:
             user.offers.append(offer)
-        self.Session().add(user)
-        self.Session().commit()
+        self.Session.add(user)
+        self.Session.commit()
         print("[+] New user was created.")
         return password
 
@@ -373,7 +373,7 @@ class UsersBackend:
                     username,
                     kwargs):
         (
-            self.Session()
+            self.Session
             .query(Users)
             .filter(Users.username==username)
             .update(kwargs|{"updated_at": date.today})
@@ -383,5 +383,5 @@ class UsersBackend:
     
     def delete_user(self, username):
         if (user:=self.user_exists(username)):
-            self.Session().delete(user[0])
-            self.Session().commit()
+            self.Session.delete(user[0])
+            self.Session.commit()
