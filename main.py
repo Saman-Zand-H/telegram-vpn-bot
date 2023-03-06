@@ -105,10 +105,10 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await update.message.reply_text(reply_text, reply_markup=auth_markup)
         return AUTH
-    results = Session().query(Users).filter(Users.login_code == login_code)
+    results = Session.query(Users).filter(Users.login_code == login_code)
     if results.count() != 0:
         results.all().update({Users.is_authenticated: True})
-        Session().commit()
+        Session.commit()
         await update.message.reply_text("Congratualations! You're logged in now.")
         return PRO
     else:
@@ -125,13 +125,13 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         case "free server":
             tr = TrojanBackend()
             vmess = VmessBackend()
-            guest_qs = Session().query(Guests).filter(Guests.username == username)
+            guest_qs = Session.query(Guests).filter(Guests.username == username)
 
             if guest_qs.count() == 0:
                 guest = Guests(username=username, started_at=datetime.now().date())
                 print("Creating guest...")
-                Session().add(guest)
-                Session().commit()
+                Session.add(guest)
+                Session.commit()
 
                 await sync_to_async(tr.create_user)(
                     username, (password := generate_password(username)), quota=10**9
@@ -143,7 +143,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             else:
                 print("Not creating guest")
-                started_at = Session().query(Guests.started_at).filter(Guests.username==username).first()[0]
+                started_at = Session.query(Guests.started_at).filter(Guests.username==username).first()[0]
                 if datetime.now().date() - started_at >= timedelta(days=30):
                     quota = tr.retrieve("users", "username", username)
                     await sync_to_async(tr.update_data)(
@@ -184,22 +184,22 @@ async def pro(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
     Session = sessionmaker(bind=engine)()
-    user = Session().query(Users).filter(Users.username == username).first()
+    user = Session.query(Users).filter(Users.username == username).first()
     match update.message.text.lower():
         case "logout":
             (
-                Session()
+                Session
                 .query(Users)
                 .filter(Users.username == username)
                 .update({"is_authenticated": False})
             )
-            Session().commit()
+            Session.commit()
             await update.message.reply_text("You are logged out now.")
             return AUTH
         case "list servers":
             services = [
                 *chain.from_iterable(
-                    Session()
+                    Session
                     .query(Offers.name)
                     .filter(
                         UsersOffersLink.offer_id == Offers.id,
@@ -349,10 +349,10 @@ async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
     Session = sessionmaker(bind=engine)()
     name = update.effective_user.first_name
-    user = Session().query(Users).filter(Users.username == username).first()
+    user = Session.query(Users).filter(Users.username == username).first()
     offers = [
         *chain.from_iterable(
-            Session()
+            Session
             .query(Offers.name)
             .filter(
                 UsersOffersLink.user_id == user.id,
