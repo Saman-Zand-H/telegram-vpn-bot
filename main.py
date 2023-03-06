@@ -76,7 +76,14 @@ async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = Session.query(Users).filter(Users.username==username)
     
     if user.scalar() and user.first().is_authenticated:
-        return PRO
+        await update.message.reply_text(
+            "How can i help you?",
+            reply_markup=ReplyKeyboardMarkup(
+                pro_keyboard,
+                resize_keyboard=True
+            )
+        )
+        return PRO_MENU
     
     match answer:
         case "login":
@@ -119,7 +126,14 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = Session.query(Users).filter(Users.username==username)
     
     if user.scalar() and user.first().is_authenticated:
-        return PRO
+        await update.message.reply_text(
+            "How can i help you?",
+            reply_markup=ReplyKeyboardMarkup(
+                pro_keyboard,
+                resize_keyboard=True
+            )
+        )
+        return PRO_MENU
     
     if login_code.lower() == "cancel":
         reply_text = (
@@ -136,7 +150,7 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Congratualations! You're logged in now.",
                                         reply_markup=ReplyKeyboardMarkup(pro_keyboard,
                                                                          resize_keyboard=True))
-        return PRO
+        return PRO_MENU
     else:
         await update.message.reply_text(
             "Nice try but sorry buddy. This token is not valid."
@@ -417,7 +431,7 @@ async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(trojan_usage_str)
     else:
         await update.message.reply_text(
-            "Sorry you don't have any service.",
+            "Sorry you don't have any service. Buy one at @admin.",
             reply_markup=ReplyKeyboardMarkup(pro_keyboard,
                                              resize_keyboard=True)
         )
