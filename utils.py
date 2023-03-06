@@ -352,7 +352,7 @@ class UsersBackend:
                  username, 
                  name,
                  offers:List[int],
-                 quota=None,
+                 quota=0,
                  description=None):
         password = random_str(10)
         offers = [Offers(id=offer) for offer in offers]
@@ -362,9 +362,9 @@ class UsersBackend:
             quota=quota,
             description=description
         )
+        self.Session.add(user)
         for offer in offers:
             user.offers.append(offer)
-        self.Session.add(user)
         self.Session.commit()
         print("[+] New user was created.")
         return password
