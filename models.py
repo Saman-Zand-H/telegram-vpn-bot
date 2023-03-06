@@ -38,8 +38,8 @@ class Guests(Base):
     __tablename__ = "guests"
     id = Column(Integer, primary_key=True)
     username = Column(String, nullable=False, unique=True, index=True)
-    started_at = Column(Date, nullable=False, default=date.now)
-    updated_at = Column(Date, nullable=False, default=date.now)
+    started_at = Column(Date, nullable=False, default=date.today)
+    updated_at = Column(Date, nullable=False, default=date.today)
 
 
 class Users(Base):
@@ -48,8 +48,8 @@ class Users(Base):
     name = Column(String, nullable=False, unique=True)
     username = Column(String, nullable=False, unique=True, index=True)
     login_code = Column(String, nullable=False, unique=True, index=True)
-    started_at = Column(Date, default=date.now, nullable=False)
-    updated_at = Column(Date, default=date.now, nullable=False)
+    started_at = Column(Date, default=date.today, nullable=False)
+    updated_at = Column(Date, default=date.today, nullable=False)
     quota = Column(Numeric, nullable=False, default=-1)
     is_authenticated = Column(Boolean, default=False, nullable=False)
     description = Column(Text, nullable=True)

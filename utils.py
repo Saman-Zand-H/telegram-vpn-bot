@@ -8,7 +8,7 @@ from collections import deque
 from models import TrojanUsers, TrojanBase
 from v2ray_util.global_setting.stats_ctr import Loader, StatsFactory
 from v2ray_util.util_core.writer import NodeWriter
-from v2ray_util.util_core.selector import GroupSelector, ClientSelector
+from v2ray_util.util_core.selector import GroupSelector
 from itertools import chain, groupby
 from operator import attrgetter
 
