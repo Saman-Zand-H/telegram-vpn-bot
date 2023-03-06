@@ -7,7 +7,6 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
-    Enum,
     BigInteger,
     Boolean,
 )
