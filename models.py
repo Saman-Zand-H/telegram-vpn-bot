@@ -13,7 +13,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.mysql import BIGINT as MYSQLBIGINT
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import date
 import enum
 
 
@@ -34,20 +34,12 @@ class Offers(Base):
     users = relationship("Users", secondary="users_offers_link")
 
 
-class V2Ray(Base):
-    __tablename__ = "v2ray"
-    id = Column(Integer, primary_key=True)
-    username = Column(String, nullable=False, index=True)
-    protocol = Column(Enum(V2RayProtocolEnum))
-    link = Column(String, nullable=True)
-
-
 class Guests(Base):
     __tablename__ = "guests"
     id = Column(Integer, primary_key=True)
     username = Column(String, nullable=False, unique=True, index=True)
-    started_at = Column(Date, nullable=False, default=datetime.now)
-    updated_at = Column(Date, nullable=False, default=datetime.now)
+    started_at = Column(Date, nullable=False, default=date.now)
+    updated_at = Column(Date, nullable=False, default=date.now)
 
 
 class Users(Base):
@@ -56,7 +48,8 @@ class Users(Base):
     name = Column(String, nullable=False, unique=True)
     username = Column(String, nullable=False, unique=True, index=True)
     login_code = Column(String, nullable=False, unique=True, index=True)
-    started_at = Column(Date, default=datetime.now, nullable=False)
+    started_at = Column(Date, default=date.now, nullable=False)
+    updated_at = Column(Date, default=date.now, nullable=False)
     quota = Column(Numeric, nullable=False, default=-1)
     is_authenticated = Column(Boolean, default=False, nullable=False)
     description = Column(Text, nullable=True)

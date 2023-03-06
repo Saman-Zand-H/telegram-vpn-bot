@@ -30,6 +30,23 @@ def generate_trojan_str(password, domain="whiteelli.tk", port=443, name="FreeCon
         "security=tls&headerType=none&type=tcp&"
         f"sni={domain}#{name}"
     )
+    
+
+def trunc_number(number:int):
+    pref_val = len(str(number)) // 3
+    match pref_val:
+        case 0:
+            return f"{number}"
+        case 1:
+            return f"{number}K"
+        case 2:
+            return f"{number}M"
+        case 3:
+            return f"{number}G" 
+        case 4:
+            return f"{number} T"
+        case _:
+            return f"{number}"
 
 
 logger = getLogger(__name__)
@@ -185,6 +202,30 @@ class TrojanBackend:
             logger.info("[+] Row updated successfully.")
         except:
             print("[!] An error occured while updating...")
+
+    def user_exists(self, username):
+        return bool(
+            self.Session()
+            .query(TrojanUsers)
+            .filter(TrojanUsers.username==username)
+            .count()
+        )
+
+    def usage(self, username):
+        usage = {"download": 0, "upload": 0, "total": 0}
+        if self.user_exists(username):
+            data = (
+                self.Session()
+                .query(TrojanUsers)
+                .filter(TrojanUsers.username==username)
+                .first()
+            )
+            usage.update({
+                "download": data.download,
+                "upload": data.upload,
+                "total": data.upload+data.download
+            })
+        return usage
 
 
 class VmessBackend:
