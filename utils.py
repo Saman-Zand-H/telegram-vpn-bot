@@ -363,6 +363,7 @@ class UsersBackend:
             description=description
         )
         self.Session.add(user)
+        self.Session.commit()
         for offer in offers:
             user.offers.append(offer)
         self.Session.commit()
