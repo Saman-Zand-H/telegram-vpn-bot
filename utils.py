@@ -360,7 +360,8 @@ class UsersBackend:
             username=username,
             name=name,
             quota=quota,
-            description=description
+            description=description,
+            login_code=password
         )
         self.Session.add(user)
         self.Session.commit()
