@@ -255,6 +255,7 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return PROTOCOL
 
         case "account status":
+            print("yep")
             return ACCOUNT_STATS
 
 
@@ -375,6 +376,7 @@ async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @login_required
 async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print("helllloooooooooooooooooooooo")
     username = update.effective_user.username
     Session = sessionmaker(bind=engine)()
     name = update.effective_user.first_name
