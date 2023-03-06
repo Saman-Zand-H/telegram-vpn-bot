@@ -164,9 +164,9 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(generate_trojan_str(password))
             vmess = VmessBackend()
             await update.message.reply_text(
-                vmess.generate_link(username, "whiteelli.tk", 443)
+                vmess.generate_link(username, "whiteelli.tk", 443),
+                reply_markup=auth_markup
             )
-            await update.message.reply_text(reply_markup=auth_markup)
         case "back":
             pass
 
