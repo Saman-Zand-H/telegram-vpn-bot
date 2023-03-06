@@ -108,6 +108,7 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     results = Session().query(Users).filter(Users.login_code == login_code)
     if results.count() != 0:
         results.all().update({Users.is_authenticated: True})
+        Session().commit()
         await update.message.reply_text("Congratualations! You're logged in now.")
         return PRO
     else:
@@ -127,6 +128,8 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if guest_qs.count() == 0:
                 guest = Guests(username=username, started_at=datetime.now().date())
+                Session().add(guest)
+                Session().commit()
 
                 await sync_to_async(tr.create_user)(
                     username, (password := generate_password(username)), quota=10**9
@@ -137,7 +140,8 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await sleep(3)
 
             else:
-                if datetime.now().date() - guest.started_at >= timedelta(days=30):
+                started_at = Session().query(Guests.started_at).filter(Guests.username==username).first()[0]
+                if datetime.now().date() - started_at >= timedelta(days=30):
                     quota = tr.retrieve("users", "username", username)
                     await sync_to_async(tr.update_data)(
                         "users", "username", username, "quota", quota[0][3] + 10**6
@@ -184,6 +188,7 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 .filter(Users.username == username)
                 .update({"is_authenticated": False})
             )
+            Session().commit()
             await update.message.reply_text("You are logged out now.")
             return AUTH
         case "list servers":
@@ -419,7 +424,7 @@ def main():
             ACCOUNT_STATS: [MessageHandler(filters.ALL, account_status)],
         },
         name="telegram_bot",
-        persistent=False,
+        persistent=True,
         fallbacks=[MessageHandler(filters.ALL, start)],
     )
     application.add_handler(conv_handler)

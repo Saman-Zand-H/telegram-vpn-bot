@@ -5,12 +5,13 @@ import sys, hashlib, shutil, subprocess, shlex
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from collections import deque
-from models import TrojanUsers, TrojanBase
+from models import TrojanUsers, TrojanBase, Users
 from v2ray_util.global_setting.stats_ctr import Loader, StatsFactory
 from v2ray_util.util_core.writer import NodeWriter
 from v2ray_util.util_core.selector import GroupSelector
 from itertools import chain, groupby
 from operator import attrgetter
+from datetime import date
 
 from typing import List
 
@@ -80,12 +81,14 @@ class TrojanBackend:
     def _create_user(self, username, password, quota, description):
         quota = int(quota)
         logger.info("[*] creating database record...")
-        TrojanUsers(
+        user = TrojanUsers(
             username=username,
             password=hashlib.sha224(password.encode()).hexdigest(),
             quota=quota,
             description=description,
         )
+        self.Session().add(user)
+        self.Session().commit()
 
     def _create_random_users(self, count, prefix, quota, description):
         if description is None:
@@ -335,3 +338,49 @@ class VmessBackend:
         nodes = self._retrieve_nodes()
         result = self.search_list_of_lists(nodes, name)
         return self._link(result[1], domain, port)
+
+
+class UsersBackend:
+    def __init__(self):
+        self.engine = create_engine(f"sqlite+pysqlite:///root/telbot/data.db")
+        self.Session = sessionmaker(bind=self.engine)
+            
+    def user_exists(self, username):
+        return self.Session().query(Users).filter(Users.username==username).all()
+            
+    def new_user(self, 
+                 username, 
+                 name,
+                 quota,
+                 offers,
+                 description):
+        password = random_str(10)
+        user = Users(
+            username=username,
+            name=name,
+            quota=quota,
+            offers=offers,
+            description=description,
+            password=password
+        )
+        self.Session().add(user)
+        self.Session().commit()
+        print("[+] New user was created.")
+        return password
+
+    def update_user(self,
+                    username,
+                    kwargs):
+        (
+            self.Session()
+            .query(Users)
+            .filter(Users.username==username)
+            .update(kwargs|{"updated_at": date.today})
+        )
+        print("[+] User was updated.")
+        return 
+    
+    def delete_user(self, username):
+        if (user:=self.user_exists(username)):
+            self.Session().delete(user[0])
+            self.Session().commit()
