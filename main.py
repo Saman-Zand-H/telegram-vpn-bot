@@ -128,6 +128,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if guest_qs.count() == 0:
                 guest = Guests(username=username, started_at=datetime.now().date())
+                print("Creating guest...")
                 Session().add(guest)
                 Session().commit()
 
@@ -140,6 +141,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await sleep(3)
 
             else:
+                print("Not creating guest")
                 started_at = Session().query(Guests.started_at).filter(Guests.username==username).first()[0]
                 if datetime.now().date() - started_at >= timedelta(days=30):
                     quota = tr.retrieve("users", "username", username)
