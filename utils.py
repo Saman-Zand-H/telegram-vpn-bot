@@ -19,14 +19,14 @@ from typing import List
     
     
 def login_required(function):
-    def wrapper(update: Update, context: ContextTypes):
+    async def wrapper(update: Update, context: ContextTypes):
         username = update.effective_user.username
         engine = create_engine("sqlite+pysqlite:////root/telbot/data.db")
         Session = sessionmaker(bind=engine)()
         user = Session.query(Users).filter(Users.username==username)
         if user.exists():
             return function(update, context)
-        update.message.reply_text("You must be logged in for this!")
+        await update.message.reply_text("You must be logged in for this!")
         return chr(0)
     return wrapper
 
