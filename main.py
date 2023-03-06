@@ -35,7 +35,7 @@ DOMAINS = ["whitelli.tk", "blackelli.duckdns.org"]
 engine = create_engine(f"sqlite+pysqlite:////{DB_PATH}", echo=True)
 AUTH, GUEST_MENU, PRO, PRO_MENU = map(chr, range(4))
 LOGIN, GUEST = map(chr, range(4, 6))
-PROTOCOL, CONF_TYPE, START, ACCOUNT_STATS = map(chr, range(6, 10))
+PROTOCOL, CONF_TYPE, START = map(chr, range(6, 9))
 FILE_EXT_MAPPING = {
     "vmess": {"android": ["npv4"], "ios": ["inpv"]},
     "vless": {"android": ["npv4"], "ios": ["inpv"]},
@@ -229,6 +229,7 @@ async def pro(update: Update, context: ContextTypes.DEFAULT_TYPE):
 @login_required
 async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
+    name = update.effective_user.first_name
     Session = sessionmaker(bind=engine)()
     user = Session.query(Users).filter(Users.username == username).first()
     print("before")
@@ -271,7 +272,48 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         case "account status":
             await update.message.reply_text("Gettings stats...")
-            return ACCOUNT_STATS
+            offers = [
+                *chain.from_iterable(
+                    Session.query(Offers.name)
+                    .filter(
+                        UsersOffersLink.user_id == user.id,
+                        UsersOffersLink.offer_id == Offers.id,
+                    )
+                    .all()
+                )
+            ]
+            if "v2ray_trojan" in offers:
+                vmess_usage = VmessBackend().usage(username)
+                trojan_usage = TrojanBackend().usage(username)
+                updated_at = user.updated_at.strftime("%y/%m/%d")
+                await update.message.reply_chat_action("typing")
+
+                await update.message.reply_text(
+                    f"Dear {name}, your usage ever since {updated_at} is as following:"
+                )
+
+                vmess_usage_str = (
+                    "Vmess Protocol:\n"
+                    f"Download: {trunc_number(vmess_usage['download'])}b \t"
+                    f"Upload: {trunc_number(vmess_usage['upload'])}b \t"
+                    f"Total: {trunc_number(vmess_usage['total'])}b"
+                )
+                await update.message.reply_text(vmess_usage_str)
+
+                trojan_usage_str = (
+                    "Trojan Protocol:\n"
+                    f"Download: {trunc_number(trojan_usage['download'])}b \t"
+                    f"Upload: {trunc_number(trojan_usage['upload'])}b \t"
+                    f"Total: {trunc_number(trojan_usage['total'])}b"
+                )
+                await update.message.reply_text(trojan_usage_str)
+            else:
+                await update.message.reply_text(
+                    "Sorry you don't have any service. Buy one at @admin.",
+                    reply_markup=ReplyKeyboardMarkup(pro_keyboard,
+                                                    resize_keyboard=True)
+                )
+            return PRO_MENU
 
 
 @login_required
@@ -389,58 +431,6 @@ async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return PRO
 
 
-@login_required
-async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print("called")
-    username = update.effective_user.username
-    Session = sessionmaker(bind=engine)()
-    name = update.effective_user.first_name
-    user = Session.query(Users).filter(Users.username == username).first()
-    offers = [
-        *chain.from_iterable(
-            Session.query(Offers.name)
-            .filter(
-                UsersOffersLink.user_id == user.id,
-                UsersOffersLink.offer_id == Offers.id,
-            )
-            .all()
-        )
-    ]
-    print(offers)
-    if "v2ray_trojan" in offers:
-        vmess_usage = VmessBackend().usage(username)
-        trojan_usage = TrojanBackend().usage(username)
-        updated_at = user.updated_at.strftime("%y/%m/%d")
-        await update.message.reply_chat_action("typing")
-
-        await update.message.reply_text(
-            f"Dear {name}, your usage ever since {updated_at} is as following:"
-        )
-
-        vmess_usage_str = (
-            "Vmess Protocol:\n"
-            f"Download: {trunc_number(vmess_usage['download'])}b \t"
-            f"Upload: {trunc_number(vmess_usage['upload'])}b \t"
-            f"Total: {trunc_number(vmess_usage['total'])}b"
-        )
-        await update.message.reply_text(vmess_usage_str)
-
-        trojan_usage_str = (
-            "Trojan Protocol:\n"
-            f"Download: {trunc_number(trojan_usage['download'])}b \t"
-            f"Upload: {trunc_number(trojan_usage['upload'])}b \t"
-            f"Total: {trunc_number(trojan_usage['total'])}b"
-        )
-        await update.message.reply_text(trojan_usage_str)
-    else:
-        await update.message.reply_text(
-            "Sorry you don't have any service. Buy one at @admin.",
-            reply_markup=ReplyKeyboardMarkup(pro_keyboard,
-                                             resize_keyboard=True)
-        )
-    return PRO_MENU
-
-
 def main():
     Base.metadata.create_all(engine)
     print("[+] Database is up to date. Running the app...")
@@ -482,7 +472,6 @@ def main():
                     conf_type,
                 )
             ],
-            ACCOUNT_STATS: [MessageHandler(filters.ALL, account_status)],
         },
         name="telegram_bot",
         persistent=True,
