@@ -342,7 +342,7 @@ class VmessBackend:
 
 class UsersBackend:
     def __init__(self):
-        self.engine = create_engine(f"sqlite+pysqlite:///root/telbot/data.db")
+        self.engine = create_engine(f"sqlite+pysqlite:////root/telbot/data.db")
         self.Session = sessionmaker(bind=self.engine)()
             
     def user_exists(self, username):
