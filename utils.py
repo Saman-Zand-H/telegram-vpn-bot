@@ -351,17 +351,16 @@ class UsersBackend:
     def new_user(self, 
                  username, 
                  name,
-                 quota,
                  offers,
-                 description):
+                 quota=None,
+                 description=None):
         password = random_str(10)
         user = Users(
             username=username,
             name=name,
             quota=quota,
-            offers=offers,
             description=description,
-            password=password
+            offers=offers
         )
         self.Session().add(user)
         self.Session().commit()

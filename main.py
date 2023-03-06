@@ -130,21 +130,21 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if guest_qs.count() == 0:
                 guest = Guests(username=username, started_at=datetime.now().date())
-                print("Creating guest...")
                 Session.add(guest)
                 Session.commit()
 
-                await sync_to_async(tr.create_user)(
-                    username, password, quota=10**9
-                )
+                await sync_to_async(tr.create_user)(username, password, quota=10**9)
                 await sync_to_async(vmess.new_user)(username)
                 await update.message.reply_text("Creating Vmess Account...")
                 await update.message.reply_chat_action("typing")
                 await sleep(3)
 
             else:
-                print("Not creating guest")
-                started_at = Session.query(Guests.started_at).filter(Guests.username==username).first()[0]
+                started_at = (
+                    Session.query(Guests.started_at)
+                    .filter(Guests.username == username)
+                    .first()[0]
+                )
                 if datetime.now().date() - started_at >= timedelta(days=30):
                     quota = tr.retrieve("users", "username", username)
                     await sync_to_async(tr.update_data)(
@@ -166,7 +166,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             vmess = VmessBackend()
             await update.message.reply_text(
                 vmess.generate_link(username, "whiteelli.tk", 443),
-                reply_markup=auth_markup
+                reply_markup=auth_markup,
             )
         case "back":
             pass
@@ -189,8 +189,7 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     match update.message.text.lower():
         case "logout":
             (
-                Session
-                .query(Users)
+                Session.query(Users)
                 .filter(Users.username == username)
                 .update({"is_authenticated": False})
             )
@@ -200,8 +199,7 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         case "list servers":
             services = [
                 *chain.from_iterable(
-                    Session
-                    .query(Offers.name)
+                    Session.query(Offers.name)
                     .filter(
                         UsersOffersLink.offer_id == Offers.id,
                         UsersOffersLink.user_id == user.id,
@@ -310,11 +308,7 @@ async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     )
             elif pref_protocol in ["vmess", "vless"]:
                 for domain in DOMAINS:
-                    vmess = VmessBackend().generate_link(
-                        username, 
-                        domain,
-                        443
-                    )
+                    vmess = VmessBackend().generate_link(username, domain, 443)
                     await update.message.reply_text(vmess)
         case "raw":
             if pref_protocol == "trojan":
@@ -353,8 +347,7 @@ async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = Session.query(Users).filter(Users.username == username).first()
     offers = [
         *chain.from_iterable(
-            Session
-            .query(Offers.name)
+            Session.query(Offers.name)
             .filter(
                 UsersOffersLink.user_id == user.id,
                 UsersOffersLink.offer_id == Offers.id,
