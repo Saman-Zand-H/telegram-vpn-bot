@@ -13,6 +13,7 @@ from utils import (
     TrojanBackend,
     VmessBackend,
     trunc_number,
+    login_required
 )
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import (
@@ -50,6 +51,11 @@ auth_markup = ReplyKeyboardMarkup(keyboard=auth_keyboard, resize_keyboard=True)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    Session = sessionmaker(bind=engine)()
+    username = update.effective_user.username
+    user = Session.query(Users).filter(Users.username==username)
+    if user.exists() and user.first().is_authenticated:
+        return PRO
     reply_text = (
         f"Hi {update.effective_user.first_name}! My name is {bot_name}. "
         "You can either buy a pro account by contacting @admin, and use it, "
@@ -61,6 +67,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
     answer = update.message.text.lower()
+    Session = sessionmaker(bind=engine)()
+    username = update.effective_user.username
+    user = Session.query(Users).filter(Users.username==username)
+    
+    if user.exists() and user.first().is_authenticated:
+        return PRO
+    
     match answer:
         case "login":
             reply_text = (
@@ -98,6 +111,12 @@ async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     login_code = update.message.text
     Session = sessionmaker(bind=engine)()
+    username = update.effective_user.username
+    user = Session.query(Users).filter(Users.username==username)
+    
+    if user.exists() and user.first().is_authenticated:
+        return PRO
+    
     if login_code.lower() == "cancel":
         reply_text = (
             f"Hi {update.effective_user.first_name}! My name is {bot_name}. "
@@ -175,6 +194,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return AUTH
 
 
+@login_required
 async def pro(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Welcome to your dashboard. " "How can i help you today?",
@@ -183,6 +203,7 @@ async def pro(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return PRO_MENU
 
 
+@login_required
 async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
     Session = sessionmaker(bind=engine)()
@@ -228,6 +249,7 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return ACCOUNT_STATS
 
 
+@login_required
 async def protocol(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conf_rules = ["URL", "Raw"]
     reply_text = (
@@ -250,6 +272,7 @@ async def protocol(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return CONF_TYPE
 
 
+@login_required
 async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
     pref_protocol = (
         (pinned := update.message.pinned_message).text.lower()
@@ -341,6 +364,7 @@ async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return PRO
 
 
+@login_required
 async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
     Session = sessionmaker(bind=engine)()
