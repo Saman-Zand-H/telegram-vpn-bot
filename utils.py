@@ -5,7 +5,7 @@ import sys, hashlib, shutil, subprocess, shlex
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from collections import deque
-from models import TrojanUsers, TrojanBase, Users
+from models import TrojanUsers, TrojanBase, Users, Offers
 from v2ray_util.global_setting.stats_ctr import Loader, StatsFactory
 from v2ray_util.util_core.writer import NodeWriter
 from v2ray_util.util_core.selector import GroupSelector
@@ -351,17 +351,19 @@ class UsersBackend:
     def new_user(self, 
                  username, 
                  name,
-                 offers,
+                 offers:List[int],
                  quota=None,
                  description=None):
         password = random_str(10)
+        offers = [Offers(id=offer) for offer in offers]
         user = Users(
             username=username,
             name=name,
             quota=quota,
-            description=description,
-            offers=offers
+            description=description
         )
+        for offer in offers:
+            user.offers.append(offer)
         self.Session().add(user)
         self.Session().commit()
         print("[+] New user was created.")
