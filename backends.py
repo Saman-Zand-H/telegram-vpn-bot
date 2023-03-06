@@ -12,7 +12,7 @@ from typing import List
 from logging import getLogger
 from operator import attrgetter
 from datetime import date
-from .utils import random_str 
+from utils import random_str
 
 
 logger = getLogger(__name__)
