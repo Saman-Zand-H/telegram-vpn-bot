@@ -303,13 +303,13 @@ async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         )
                     )
             elif pref_protocol in ["vmess", "vless"]:
-                result = (
-                    Session()
-                    .query(V2Ray)
-                    .filter(V2Ray.username == username, V2Ray.protocol == pref_protocol)
-                    .first()
-                )
-                await update.message.reply_text(result.link)
+                for domain in DOMAINS:
+                    vmess = VmessBackend().generate_link(
+                        username, 
+                        domain,
+                        443
+                    )
+                    await update.message.reply_text(vmess)
         case "raw":
             if pref_protocol == "trojan":
                 reply_text = [
