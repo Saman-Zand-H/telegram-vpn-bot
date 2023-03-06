@@ -358,10 +358,10 @@ async def protocol(update: Update, context: ContextTypes.DEFAULT_TYPE):
     match (choice := update.message.text).lower():
         case "ssh":
             conf_rules.remove("URL")
-            conf_rules.append("File (Android)", "File (IOS)")
+            conf_rules.extend(["File (Android)", "File (IOS)"])
             
         case "vless" | "vmess":
-            conf_rules.append("File (Android)", "File (IOS)")
+            conf_rules.extend(["File (Android)", "File (IOS)"])
 
     await update.message.reply_text(
         reply_text % (choice,),
