@@ -55,9 +55,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
     user = Session.query(Users).filter(Users.username==username)
     if user.scalar() and user.first().is_authenticated:
-        await update.message.reply_text(f"Welcom back {update.effective_user.name}!",
-                                        reply_markup=ReplyKeyboardMarkup(pro_keyboard,
-                                                                         resize_keyboard=True))
+        await update.message.reply_text(
+            f"Welcom back {update.effective_user.first_name}!",
+            reply_markup=ReplyKeyboardMarkup(pro_keyboard,
+                                             resize_keyboard=True))
         return PRO
     reply_text = (
         f"Hi {update.effective_user.first_name}! My name is {bot_name}. "
@@ -197,15 +198,6 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pass
 
     return AUTH
-
-
-@login_required
-async def pro(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Welcome to your dashboard. " "How can i help you today?",
-        reply_markup=ReplyKeyboardMarkup(keyboard=pro_keyboard, resize_keyboard=True),
-    )
-    return PRO_MENU
 
 
 @login_required
@@ -437,18 +429,18 @@ def main():
             GUEST_MENU: [
                 MessageHandler(filters.Regex("^(Free Server|Back)$"), guest_menu)
             ],
-            PRO: [
+            PRO_MENU: [
                 MessageHandler(
-                    filters.Regex("^(List Servers|Account Status|Logout)$"), pro
+                    filters.Regex("^(List Servers|Account Status|Logout)$"), pro_menu
                 )
             ],
-            PRO_MENU: [
-                MessageHandler(filters.Regex("^(SSH|Trojan|VMESS|VLESS)$"), pro_menu)
+            PROTOCOL: [
+                MessageHandler(filters.Regex("^(SSH|Trojan|VMESS|VLESS)$"), protocol)
             ],
             CONF_TYPE: [
                 MessageHandler(
                     filters.Regex(r"^(File \(Android\)|File \(IOS\)|URL|Raw)$"),
-                    protocol,
+                    conf_type,
                 )
             ],
             ACCOUNT_STATS: [MessageHandler(filters.ALL, account_status)],
