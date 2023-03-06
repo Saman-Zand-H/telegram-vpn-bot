@@ -272,6 +272,8 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         case "account status":
             await update.message.reply_text("Gettings stats...")
+            await update.message.reply_chat_action("typing")
+            
             offers = [
                 *chain.from_iterable(
                     Session.query(Offers.name)

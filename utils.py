@@ -373,7 +373,10 @@ class UsersBackend:
                  description=None):
         if not (user:=self.user_exists(username)):
             password = random_str(10)
-            offers = [Offers(id=offer) for offer in offers]
+            offers = [
+                self.Session.query(Offers).filter(Offers.id==id).all()[0]
+                for offer in offers
+            ]
             user = Users(
                 username=username,
                 name=name,
@@ -381,10 +384,9 @@ class UsersBackend:
                 description=description,
                 login_code=password
             )
-            self.Session.add(user)
-            self.Session.commit()
             for offer in offers:
                 user.offers.append(offer)
+            self.Session.add(user)
             self.Session.commit()
             print("[+] New user was created.")
             return password
