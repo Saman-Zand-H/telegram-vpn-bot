@@ -31,8 +31,7 @@ token = os.environ.get("BOT_TOKEN")
 bot_name = "vpn_bot only"
 DB_PATH = "/root/telbot/data.db"
 DOMAINS = ["whitelli.tk", "blackelli.duckdns.org"]
-engine = create_engine(f"sqlite+pysqlite:///{DB_PATH}", echo=True)
-Session = sessionmaker(bind=engine)
+
 AUTH, GUEST_MENU, PRO, PRO_MENU = map(chr, range(4))
 LOGIN, GUEST = map(chr, range(4, 6))
 PROTOCOL, CONF_TYPE, START, ACCOUNT_STATS = map(chr, range(6, 10))
@@ -97,6 +96,7 @@ async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     login_code = update.message.text
+    Session = sessionmaker(bind=engine)
     if login_code.lower() == "cancel":
         reply_text = (
             f"Hi {update.effective_user.first_name}! My name is {bot_name}. "
@@ -120,6 +120,7 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
+    Session = sessionmaker(bind=engine)
     match update.message.text.lower():
         case "free server":
             tr = TrojanBackend()
@@ -165,6 +166,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(
                 vmess.generate_link(username, "whiteelli.tk", 443)
             )
+            await update.message.reply_text(reply_markup=auth_markup)
         case "back":
             pass
 
@@ -181,6 +183,7 @@ async def pro(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
+    Session = sessionmaker(bind=engine)
     user = Session().query(Users).filter(Users.username == username).first()
     match update.message.text.lower():
         case "logout":
@@ -344,6 +347,7 @@ async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
+    Session = sessionmaker(bind=engine)
     name = update.effective_user.first_name
     user = Session().query(Users).filter(Users.username == username).first()
     offers = [
@@ -386,6 +390,7 @@ async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def main():
+    engine = create_engine(f"sqlite+pysqlite:///{DB_PATH}", echo=True)
     Base.metadata.create_all(engine)
     print("[+] Database is up to date. Running the app...")
 
