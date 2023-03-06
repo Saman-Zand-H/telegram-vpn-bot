@@ -255,7 +255,6 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return PROTOCOL
 
         case "account status":
-            print("yep")
             return ACCOUNT_STATS
 
 
@@ -376,7 +375,6 @@ async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @login_required
 async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print("helllloooooooooooooooooooooo")
     username = update.effective_user.username
     Session = sessionmaker(bind=engine)()
     name = update.effective_user.first_name
@@ -391,6 +389,7 @@ async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
             .all()
         )
     ]
+    print(offers)
     if "v2ray_trojan" in offers:
         vmess_usage = VmessBackend().usage(username)
         trojan_usage = TrojanBackend().usage(username)
@@ -416,7 +415,13 @@ async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Total: {trunc_number(trojan_usage['total'])}b"
         )
         await update.message.reply_text(trojan_usage_str)
-    return PRO
+    else:
+        await update.message.reply_text(
+            "Sorry you don't have any service.",
+            reply_markup=ReplyKeyboardMarkup(pro_keyboard,
+                                             resize_keyboard=True)
+        )
+    return PRO_MENU
 
 
 def main():
