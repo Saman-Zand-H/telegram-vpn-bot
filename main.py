@@ -31,7 +31,7 @@ token = os.environ.get("BOT_TOKEN")
 bot_name = "vpn_bot only"
 DB_PATH = "/root/telbot/data.db"
 DOMAINS = ["whitelli.tk", "blackelli.duckdns.org"]
-
+engine = create_engine(f"sqlite+pysqlite:///{DB_PATH}", echo=True)
 AUTH, GUEST_MENU, PRO, PRO_MENU = map(chr, range(4))
 LOGIN, GUEST = map(chr, range(4, 6))
 PROTOCOL, CONF_TYPE, START, ACCOUNT_STATS = map(chr, range(6, 10))
@@ -390,7 +390,6 @@ async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def main():
-    engine = create_engine(f"sqlite+pysqlite:///{DB_PATH}", echo=True)
     Base.metadata.create_all(engine)
     print("[+] Database is up to date. Running the app...")
 
