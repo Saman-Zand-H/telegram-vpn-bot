@@ -66,7 +66,9 @@ async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_text = (
                 f"Dear {update.effective_user.first_name}\n" "Enter your login code: "
             )
-            cancel_markup = ReplyKeyboardMarkup([["Cancel"]], resize_keyboard=True)
+            cancel_markup = ReplyKeyboardMarkup([["Cancel"]], 
+                                                resize_keyboard=True, 
+                                                one_time_keyboard=False)
             await update.message.reply_text(reply_text, reply_markup=cancel_markup)
             return LOGIN
         case "guest":
