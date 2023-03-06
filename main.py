@@ -107,7 +107,7 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return AUTH
     results = Session.query(Users).filter(Users.login_code == login_code)
     if results.count() != 0:
-        results.all().update({Users.is_authenticated: True})
+        results.update({Users.is_authenticated: True})
         Session.commit()
         await update.message.reply_text("Congratualations! You're logged in now.")
         return PRO
