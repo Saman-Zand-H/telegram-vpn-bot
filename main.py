@@ -232,7 +232,6 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     name = update.effective_user.first_name
     Session = sessionmaker(bind=engine)()
     user = Session.query(Users).filter(Users.username == username).first()
-    print("before")
     match update.message.text.lower():
         case "logout":
             (
