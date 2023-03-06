@@ -403,6 +403,7 @@ async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return PRO_MENU
         case "url":
+            await update.message.reply_chat_action("typing")
             if pref_protocol == "trojan":
                 password = generate_password(username)
                 tr = TrojanBackend()
@@ -458,7 +459,9 @@ async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         "password": generate_password(username),
                     }
                     await update.message.reply_text(json.dumps(reply_text))
-    return PRO
+    await update.message.reply_text("Here you go. What else can i do for you?",
+                                    reply_markup=pro_markup)
+    return PRO_MENU
 
 
 def main():
