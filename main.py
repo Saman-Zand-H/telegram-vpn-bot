@@ -126,6 +126,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             tr = TrojanBackend()
             vmess = VmessBackend()
             guest_qs = Session.query(Guests).filter(Guests.username == username)
+            password = generate_password(username)
 
             if guest_qs.count() == 0:
                 guest = Guests(username=username, started_at=datetime.now().date())
@@ -134,7 +135,7 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 Session.commit()
 
                 await sync_to_async(tr.create_user)(
-                    username, (password := generate_password(username)), quota=10**9
+                    username, password, quota=10**9
                 )
                 await sync_to_async(vmess.new_user)(username)
                 await update.message.reply_text("Creating Vmess Account...")
