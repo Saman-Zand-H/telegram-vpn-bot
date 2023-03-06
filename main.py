@@ -59,7 +59,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Welcom back {update.effective_user.first_name}!",
             reply_markup=ReplyKeyboardMarkup(pro_keyboard,
                                              resize_keyboard=True))
-        return PRO_MENU
+        return PRO
     reply_text = (
         f"Hi {update.effective_user.first_name}! My name is {bot_name}. "
         "You can either buy a pro account by contacting @admin, and use it, "
@@ -198,6 +198,18 @@ async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pass
 
     return AUTH
+
+
+@login_required
+async def pro(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "How can i help you?",
+        reply_markup=ReplyKeyboardMarkup(
+            pro_keyboard,
+            resize_keyboard=True
+        )
+    )
+    return PRO_MENU
 
 
 @login_required
@@ -429,6 +441,9 @@ def main():
             LOGIN: [MessageHandler(filters.TEXT, login)],
             GUEST_MENU: [
                 MessageHandler(filters.Regex("^(Free Server|Back)$"), guest_menu)
+            ],
+            PRO: [
+                MessageHandler(filters.ALL, pro)
             ],
             PRO_MENU: [
                 MessageHandler(
