@@ -66,8 +66,8 @@ MySqlBase = declarative_base()
 class TrojanUsers(MySqlBase):
     __tablename__ = "users"
     id = Column(BigInteger, primary_key=True)
-    username = Column(String, nullable=False)
-    password = Column(String, nullable=False, unique=True, index=True)
+    username = Column(String(255), nullable=False)
+    password = Column(String(255), nullable=False, unique=True, index=True)
     quota = Column(BigInteger, nullable=False, default=0)
     download = Column(MYSQLBIGINT(unsigned=True), nullable=False, default=0)
     upload = Column(MYSQLBIGINT(unsigned=True), nullable=False, default=0)
@@ -77,7 +77,7 @@ class TrojanUsers(MySqlBase):
 class SSHUsers(MySqlBase):
     __tablename__ = "ssh_users"
     id = Column(BigInteger, primary_key=True)
-    username = Column(String, nullable=False)
-    password = Column(String, nullable=False)
+    username = Column(String(255), nullable=False)
+    password = Column(String(255), nullable=False)
     started_at = Column(Date, default=date.today, nullable=False)
     ends_at = Column(Date, nullable=False)
