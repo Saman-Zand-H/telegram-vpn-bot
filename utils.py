@@ -24,7 +24,7 @@ def login_required(function):
         engine = create_engine("sqlite+pysqlite:////root/telbot/data.db")
         Session = sessionmaker(bind=engine)()
         user = Session.query(Users).filter(Users.username==username)
-        if user.exists():
+        if user.scalar():
             return function(update, context)
         await update.message.reply_text("You must be logged in for this!")
         return chr(0)
