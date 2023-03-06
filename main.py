@@ -241,7 +241,8 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 .update({"is_authenticated": False})
             )
             Session.commit()
-            await update.message.reply_text("You are logged out now.")
+            await update.message.reply_text("You are logged out now.",
+                                            reply_markup=auth_markup)
             return AUTH
         case "list servers":
             services = [
