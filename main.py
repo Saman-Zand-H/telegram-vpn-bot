@@ -59,7 +59,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Welcom back {update.effective_user.first_name}!",
             reply_markup=ReplyKeyboardMarkup(pro_keyboard,
                                              resize_keyboard=True))
-        return PRO
+        return PRO_MENU
     reply_text = (
         f"Hi {update.effective_user.first_name}! My name is {bot_name}. "
         "You can either buy a pro account by contacting @admin, and use it, "
