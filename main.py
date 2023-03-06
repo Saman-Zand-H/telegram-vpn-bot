@@ -270,7 +270,7 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return PROTOCOL
 
         case "account status":
-            print("not yet.")
+            await update.message.reply_text("Gettings stats...")
             return ACCOUNT_STATS
 
 
