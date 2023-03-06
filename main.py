@@ -96,7 +96,7 @@ async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     login_code = update.message.text
-    Session = sessionmaker(bind=engine)
+    Session = sessionmaker(bind=engine)()
     if login_code.lower() == "cancel":
         reply_text = (
             f"Hi {update.effective_user.first_name}! My name is {bot_name}. "
@@ -120,7 +120,7 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
-    Session = sessionmaker(bind=engine)
+    Session = sessionmaker(bind=engine)()
     match update.message.text.lower():
         case "free server":
             tr = TrojanBackend()
@@ -183,7 +183,7 @@ async def pro(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
-    Session = sessionmaker(bind=engine)
+    Session = sessionmaker(bind=engine)()
     user = Session().query(Users).filter(Users.username == username).first()
     match update.message.text.lower():
         case "logout":
@@ -347,7 +347,7 @@ async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def account_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
-    Session = sessionmaker(bind=engine)
+    Session = sessionmaker(bind=engine)()
     name = update.effective_user.first_name
     user = Session().query(Users).filter(Users.username == username).first()
     offers = [
