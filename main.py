@@ -91,13 +91,8 @@ async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_chat_action("upload_document")
             await update.message.reply_document("/root/telbot/v2rayng1.7.38.apk")
 
-            reply_text = (
-                f"Hi {update.effective_user.first_name}! My name is {bot_name}. "
-                "You can either buy a pro account by contacting @admin, and use it, "
-                "or you can use our free server with a limited quota of 1gb per month."
-            )
-            await update.message.reply_text(reply_text, reply_markup=auth_markup)
-            return START
+            await update.message.reply_text(reply_markup=auth_markup)
+            return AUTH
 
 
 async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -119,7 +114,7 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "Nice try but sorry buddy. This token is not valid."
         )
-        return START
+        return AUTH
 
 
 async def guest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
