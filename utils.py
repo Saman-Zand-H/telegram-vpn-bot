@@ -354,22 +354,24 @@ class UsersBackend:
                  offers:List[int],
                  quota=0,
                  description=None):
-        password = random_str(10)
-        offers = [Offers(id=offer) for offer in offers]
-        user = Users(
-            username=username,
-            name=name,
-            quota=quota,
-            description=description,
-            login_code=password
-        )
-        self.Session.add(user)
-        self.Session.commit()
-        for offer in offers:
-            user.offers.append(offer)
-        self.Session.commit()
-        print("[+] New user was created.")
-        return password
+        if not (user:=self.user_exists(username)):
+            password = random_str(10)
+            offers = [Offers(id=offer) for offer in offers]
+            user = Users(
+                username=username,
+                name=name,
+                quota=quota,
+                description=description,
+                login_code=password
+            )
+            self.Session.add(user)
+            self.Session.commit()
+            for offer in offers:
+                user.offers.append(offer)
+            self.Session.commit()
+            print("[+] New user was created.")
+            return password
+        return user[0].login_code
 
     def update_user(self,
                     username,
