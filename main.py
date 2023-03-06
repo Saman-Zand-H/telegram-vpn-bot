@@ -55,6 +55,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
     user = Session.query(Users).filter(Users.username==username)
     if user.scalar() and user.first().is_authenticated:
+        await update.message.reply_text(f"Welcom back {update.effective_user.name}!",
+                                        reply_markup=ReplyKeyboardMarkup(pro_keyboard,
+                                                                         resize_keyboard=True))
         return PRO
     reply_text = (
         f"Hi {update.effective_user.first_name}! My name is {bot_name}. "
@@ -129,7 +132,9 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if results.count() != 0:
         results.update({Users.is_authenticated: True})
         Session.commit()
-        await update.message.reply_text("Congratualations! You're logged in now.")
+        await update.message.reply_text("Congratualations! You're logged in now.",
+                                        reply_markup=ReplyKeyboardMarkup(pro_keyboard,
+                                                                         resize_keyboard=True))
         return PRO
     else:
         await update.message.reply_text(
