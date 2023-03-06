@@ -1,4 +1,5 @@
 import random, string, json, base64
+from functools import wraps
 from telegram import Update
 from telegram.ext import ContextTypes
 from codecs import encode
@@ -19,13 +20,14 @@ from typing import List
     
     
 def login_required(function):
+    @wraps(function)
     async def wrapper(update: Update, context: ContextTypes):
         username = update.effective_user.username
         engine = create_engine("sqlite+pysqlite:////root/telbot/data.db")
         Session = sessionmaker(bind=engine)()
         user = Session.query(Users).filter(Users.username==username)
         if user.scalar():
-            return function(update, context)
+            return await function(update, context)
         await update.message.reply_text("You must be logged in for this!")
         return chr(0)
     return wrapper
