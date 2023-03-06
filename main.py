@@ -3,17 +3,20 @@ from logging import getLogger
 from datetime import datetime, timedelta
 from asgiref.sync import sync_to_async
 from itertools import chain
-from models import Base, Users, Offers, Guests, UsersOffersLink
+from models import Base, Users, Offers, Guests, UsersOffersLink, SSHUsers
 from asyncio import sleep
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from utils import (
     generate_trojan_str,
     generate_password,
-    TrojanBackend,
-    VmessBackend,
     trunc_number,
     login_required
+)
+from backends import (
+    TrojanBackend,
+    VmessBackend,
+    SSHBackend
 )
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import (
@@ -48,6 +51,7 @@ pro_servers_conf_type_keyboard = [["File (Android)", "File (IOS)", "URL", "Raw"]
 ssh_clients_keyboard = [["HTTP Injector", "HTTP Injector (Lite)", "NapsternetV"]]
 v2ray_clients = [["V2RayNG", "NapsternetV"]]
 auth_markup = ReplyKeyboardMarkup(keyboard=auth_keyboard, resize_keyboard=True)
+pro_markup = ReplyKeyboardMarkup(keyboard=pro_keyboard, resize_keyboard=True)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -108,12 +112,24 @@ async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return GUEST_MENU
         case "clients":
+            await update.message.reply_text("For android:")
             await update.message.reply_chat_action("upload_document")
             await update.message.reply_document("/root/telbot/HTTPInjector5.9.1.apk")
             await update.message.reply_chat_action("upload_document")
             await update.message.reply_document("/root/telbot/NapsternetV53.0.0.apk")
             await update.message.reply_chat_action("upload_document")
             await update.message.reply_document("/root/telbot/v2rayng1.7.38.apk")
+            await update.message.reply_text(
+                "Note that you can use V2RayNG for Vmess and Vless and Trojan configs, "
+                "you can also use NapsternetV for Vmess and Vless configs, "
+                "and you can use HTTP Injector and NapsternetV for SSH configs."
+            )
+            await update.message.reply_text(
+                "For IOS, you can install those apps from your app store. You "
+                "can the following links to access the apps faster: \n"
+                "https://apps.apple.com/us/app/napsternetv/id1629465476\n"
+                "https://apps.apple.com/us/app/oneclick-safe-easy-fast/id1545555197"
+            )
 
             await update.message.reply_text(reply_markup=auth_markup)
             return AUTH
@@ -258,9 +274,9 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard_rules = []
             if "ssh" in services:
                 keyboard_rules.append("SSH")
-            if "trojan_v2ray" in services:
+            if "v2ray_trojan" in services:
                 keyboard_rules.extend(["Trojan", "VMESS", "VLESS"])
-
+            context.user_data["offers"] = [i.lower() for i in keyboard_rules]
             reply_text = "Choose your desired protocol: "
             await update.message.reply_text(
                 reply_text,
@@ -301,7 +317,8 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"Upload: {trunc_number(vmess_usage['upload'])}b \t"
                     f"Total: {trunc_number(vmess_usage['total'])}b"
                 )
-                await update.message.reply_text(vmess_usage_str)
+                await update.message.reply_text(vmess_usage_str,
+                                                reply_markup=pro_markup)
 
                 trojan_usage_str = (
                     "Trojan Protocol:\n"
@@ -309,8 +326,20 @@ async def pro_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"Upload: {trunc_number(trojan_usage['upload'])}b \t"
                     f"Total: {trunc_number(trojan_usage['total'])}b"
                 )
-                await update.message.reply_text(trojan_usage_str)
-            else:
+                await update.message.reply_text(trojan_usage_str,
+                                                reply_markup=pro_markup)
+            if "ssh" in offers:
+                ssh = SSHBackend()
+                stats = ssh.get_stats(username)
+                ssh.check_expiration(username)
+                started_at = stats["started_at"].strftime("%y/%m/%d")
+                ends_at = stats["ends_at"].strftime("%y/%m/%d")
+                await update.message.reply_text(
+                    f"Your service started at {started_at}, and "
+                    f"will end at {ends_at}. You have {stats['time_left'].days} days left.",
+                    reply_markup=pro_markup
+                )
+            if not ("ssh" or "v2ray_trojan" in offers):
                 await update.message.reply_text(
                     "Sorry you don't have any service. Buy one at @admin.",
                     reply_markup=ReplyKeyboardMarkup(pro_keyboard,
@@ -330,107 +359,105 @@ async def protocol(update: Update, context: ContextTypes.DEFAULT_TYPE):
         case "ssh":
             conf_rules.remove("URL")
             conf_rules.append("File (Android)", "File (IOS)")
+            
         case "vless" | "vmess":
             conf_rules.append("File (Android)", "File (IOS)")
-            conf_rules.remove("Raw")
 
     await update.message.reply_text(
         reply_text % (choice,),
         reply_markup=ReplyKeyboardMarkup(keyboard=[conf_rules], resize_keyboard=True),
     )
-    update.message.pin()
+    context.user_data["protocol"] = choice.lower()
     return CONF_TYPE
 
 
 @login_required
 async def conf_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    pref_protocol = (
-        (pinned := update.message.pinned_message).text.lower()
-        if pinned is not None
-        else "trojan"
-    )
+    pref_protocol = context.user_data.pop("protocol", "trojan")
+    offers = context.user_data.get("offers")
+    
+    if not pref_protocol in offers:
+        await update.message.reply_text(
+            "You don't have access to this service! You can "
+            "contact our @admin to grant access to this service.",
+            reply_markup=pro_markup
+        )
+        return PRO_MENU
+    
     username = update.effective_user.username
     match update.message.text.lower():
         case "file (android)":
-            # pref_map = FILE_EXT_MAPPING[pref_protocol]
-            # exts = pref_map["android"]
-            # files = [
-            #     f"/root/telbot/configs/{domain}.{ext}"
-            #     for domain, ext in product(DOMAINS, exts)
-            # ]
-            # for file in files:
-            #     update.message.reply_document(open(file, "rb"))
-            # reply_text = (
-            #     "You can use the file ending with 'npv4' in 'NapsternetV', "
-            #     "and the file ending in 'ehi' in 'HTTP Injector'."
-            # )
-            # update.message.reply_text(reply_text)
             await update.message.reply_text(
-                "Unfortunately we don't currently support "
-                "file-based configs, but it will be added soon."
+                "Sorry, we don't currently support file-based configs right not. "
+                "But we will soon provide you that service as well. Thank you for your"
+                "patience.",
+                reply_markup=pro_markup
             )
+            return PRO_MENU
         case "file (ios)":
-            # pref_map = FILE_EXT_MAPPING[pref_protocol]
-            # exts = pref_map["ios"]
-            # files = [
-            #     f"/root/telbot/configs/{domain}.{ext}"
-            #     for domain, ext in product(DOMAINS, exts)
-            # ]
-            # for file in files:
-            #     update.message.reply_document(open(file, "rb"))
-            # reply_text = (
-            #     "You can use the file ending with 'inpv' in 'NapsternetV'."
-            # )
-            # update.message.reply_text(reply_text)
             await update.message.reply_text(
-                "Unfortunately we don't currently support "
-                "file-based configs, but it will be added soon."
+                "Sorry, we don't currently support file-based configs right not. "
+                "But we will soon provide you that service as well. Thank you for your"
+                "patience.",
+                reply_markup=pro_markup
             )
+            return PRO_MENU
         case "url":
             if pref_protocol == "trojan":
                 password = generate_password(username)
                 tr = TrojanBackend()
-                tr.create_user(
-                    username=username,
-                    password=password,
-                )
+                
+                if not tr.user_exists(username):
+                    tr.create_user(
+                        username=username,
+                        password=password,
+                    )
+                    
                 for domain in DOMAINS:
                     await update.message.reply_text(
                         generate_trojan_str(
                             password=password, domain=domain, name=f"MMS_{domain}"
                         )
                     )
+                    
             elif pref_protocol in ["vmess", "vless"]:
                 for domain in DOMAINS:
                     vmess = VmessBackend().generate_link(username, domain, 443)
                     await update.message.reply_text(vmess)
+                    
         case "raw":
             if pref_protocol == "trojan":
-                reply_text = [
-                    {
-                        "host address": domain,
+                for domain in DOMAINS:
+                    reply_text = {
+                        "address": domain,
                         "port": 443,
                         "tls": "tls",
                         "network": "tcp",
                         "password": generate_password(username),
                         "sni": domain,
-                    }
-                    for domain in DOMAINS
-                ]
-                reply_text = ", ".join([json.dumps(i) for i in reply_text])
-                await update.message.reply_text(reply_text)
+                    }   
+                    await update.message.reply_text(json.dumps(reply_text))
+                await update.message.reply_text(
+                    "Note that 'remark' field that exists in some client apps, "
+                    "is actually 'name' and is of your choice."
+                )
+                
+            if pref_protocol in ["vmess", "vless"]:
+                vmess = VmessBackend()
+                node = vmess.get_or_create(username)["node"]
+                for domain in DOMAINS:
+                    vmess_json = vmess.get_json(node, domain, 443)
+                    await update.message.reply_text(json.dumps(vmess_json))
+                
             elif protocol == "ssh":
-                reply_text = [
-                    {
+                for domain in DOMAINS:
+                    reply_text = {
                         "host address": domain,
                         "port": 22,
                         "username": username,
                         "password": generate_password(username),
                     }
-                    for domain in DOMAINS
-                ]
-                reply_text = ", ".join([json.dumps(i) for i in reply_text])
-                await update.message.reply_text(reply_text)
+                    await update.message.reply_text(json.dumps(reply_text))
     return PRO
 
 

@@ -62,8 +62,8 @@ class UsersOffersLink(Base):
 
 
 ###### MYSQL ######
-TrojanBase = declarative_base()
-class TrojanUsers(TrojanBase):
+MySqlBase = declarative_base()
+class TrojanUsers(MySqlBase):
     __tablename__ = "users"
     id = Column(BigInteger, primary_key=True)
     username = Column(String, nullable=False)
@@ -72,3 +72,12 @@ class TrojanUsers(TrojanBase):
     download = Column(MYSQLBIGINT(unsigned=True), nullable=False, default=0)
     upload = Column(MYSQLBIGINT(unsigned=True), nullable=False, default=0)
     description = Column(Text, nullable=True, default="")
+    
+
+class SSHUsers(MySqlBase):
+    __tablename__ = "ssh_users"
+    id = Column(BigInteger, primary_key=True)
+    username = Column(String, nullable=False)
+    password = Column(String, nullable=False)
+    started_at = Column(Date, default=date.today, nullable=False)
+    ends_at = Column(Date, nullable=False)
