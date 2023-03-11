@@ -6,7 +6,7 @@ from v2ray_util.util_core.loader import Loader
 
 
 class CustomWriter(NodeWriter):
-    def create_new_user(self, **kw):
+    def create_new_user(self, *args, **kw):
         if self.part_json['protocol'] == 'vmess':
             email_info = ""
             user = {
@@ -45,7 +45,7 @@ def vmess_consumer(ch, method, properties, body):
                 gs = GroupSelector("add user")
                 group = gs.group
                 nw = CustomWriter(group.tag, group.index)
-                nw.create_new_user({"email": user_info, "password": password})
+                nw.create_new_user(kw={"email": user_info, "password": password})
                 print("[+] User created.")
                 
             case "delete":

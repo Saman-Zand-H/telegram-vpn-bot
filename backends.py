@@ -15,6 +15,20 @@ from datetime import date
 from utils import random_str
 
 
+logger = getLogger(__name__)
+pika_credentials = pika.PlainCredentials(username="djsadmin",
+                                         password=os.environ.get("RABBIT_PASSWORD"),
+                                         erase_on_connect=True)
+broker = pika.BlockingConnection(
+    pika.ConnectionParameters(
+        host=os.environ.get("SERVER_IP"),
+        port=5672,
+        virtual_host="tel_broker",
+        credentials=pika_credentials
+    ))
+channel = broker.channel()
+
+
 class CustomWriter(NodeWriter):
     def create_new_user(self, **kw):
         uuid = uuid4()
@@ -32,20 +46,6 @@ class CustomWriter(NodeWriter):
             print("{0} uuid: {1}, alterId: 32{2}".format("add user success!", uuid, email_info))
         self.save()
         return uuid
-
-
-logger = getLogger(__name__)
-pika_credentials = pika.PlainCredentials(username="djsadmin",
-                                         password=os.environ.get("RABBIT_PASSWORD"),
-                                         erase_on_connect=True)
-broker = pika.BlockingConnection(
-    pika.ConnectionParameters(
-        host=os.environ.get("SERVER_IP"),
-        port=5672,
-        virtual_host="tel_broker",
-        credentials=pika_credentials
-    ))
-channel = broker.channel()
 
 
 class TrojanBackend:
