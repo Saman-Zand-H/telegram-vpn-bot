@@ -1,4 +1,4 @@
-import json, base64, sys, hashlib, shutil, subprocess, shlex, pika
+import json, base64, sys, hashlib, shutil, subprocess, shlex, pika, os, socket
 from collections import deque
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -16,8 +16,17 @@ from utils import random_str
 
 
 logger = getLogger(__name__)
-# broker = pika.BlockingConnection(pika.ConnectionParameters())
-# channel = broker.channel()
+pika_credentials = pika.PlainCredentials(username="djsadmin",
+                                         password=os.environ.get("RABBIT_PASSWORD"),
+                                         erase_on_connect=True)
+broker = pika.BlockingConnection(
+    pika.ConnectionParameters(
+        host=os.environ.get("SERVER_IP"),
+        port=5672,
+        virtual_host="tel_broker",
+        credentials=pika_credentials
+    ))
+channel = broker.channel()
 
 
 class TrojanBackend:
@@ -286,31 +295,31 @@ class VmessBackend:
 
     def new_user(self, user_info):
         if not (user:=self.user_exists(user_info)):
-            # channel.queue_declare("vmess_queue")
+            channel.queue_declare("vmess_queue")
             gs = GroupSelector("add user")
             group = gs.group
             nw = NodeWriter(group.tag, group.index)
             info = {"email": user_info}
             nw.create_new_user(**info)
             sleep(3)
-            # password = self.user_exists(user_info)["node"].password
-            # data = {
-            #     "user_info": user_info,
-            #     "password": password,
-            #     "type": "new"
-            # }
-            # channel.basic_publish(
-            #     exchange="",
-            #     routing_key="vmess_queue",
-            #     body=json.dumps(data)
-            # )
+            password = self.user_exists(user_info)["node"].password
+            data = {
+                "user_info": user_info,
+                "password": password,
+                "type": "new"
+            }
+            channel.basic_publish(
+                exchange="",
+                routing_key="vmess_queue",
+                body=json.dumps(data)
+            )
             return True
         return user
     
     def delete_user(self, user_info):
         profile = Loader().profile
         if (user:=self.user_exists(user_info)):
-            # channel.queue_declare("vmess_queue")
+            channel.queue_declare("vmess_queue")
             user_number = user["node"].user_number
             group = profile.group_list[0]
             for index, node in enumerate(group.node_list):
@@ -323,11 +332,11 @@ class VmessBackend:
                 "type": "delete",
                 "user_number": user_number
             }
-            # channel.basic_publish(
-            #     exchange="",
-            #     routing_key="vmess_queue",
-            #     body=json.dumps(data)
-            # )
+            channel.basic_publish(
+                exchange="",
+                routing_key="vmess_queue",
+                body=json.dumps(data)
+            )
 
     def generate_link(self, name, domain, port):
         if not self.user_exists(name):
