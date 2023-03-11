@@ -6,7 +6,7 @@ from v2ray_util.util_core.loader import Loader
 
 
 class CustomWriter(NodeWriter):
-    def create_new_user(self, *args, **kw):
+    def create_new_user(self, kw):
         if self.part_json['protocol'] == 'vmess':
             email_info = ""
             user = {
