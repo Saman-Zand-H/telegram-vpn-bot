@@ -1,4 +1,5 @@
-import json, base64, sys, hashlib, shutil, subprocess, shlex, pika, os, socket
+import json, base64, sys, hashlib, shutil, subprocess, shlex, pika, os
+from uuid import uuid4
 from collections import deque
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -13,6 +14,25 @@ from logging import getLogger
 from operator import attrgetter
 from datetime import date
 from utils import random_str
+
+
+class CustomWriter(NodeWriter):
+    def create_new_user(self, **kw):
+        uuid = uuid4()
+        if self.part_json['protocol'] == 'vmess':
+            email_info = ""
+            user = {
+                "alterId": 0,
+                "id": "ae1bc6ce-e575-4ee2-85f1-350a0aa506cb"
+            }
+            if "email" in kw and kw["email"] != "":
+                user.update({"email":kw["email"]})
+                email_info = ", email: " + kw["email"]
+            user["id"]=str(uuid)
+            self.part_json["settings"]["clients"].append(user)
+            print("{0} uuid: {1}, alterId: 32{2}".format("add user success!", uuid, email_info))
+        self.save()
+        return uuid
 
 
 logger = getLogger(__name__)
@@ -298,11 +318,9 @@ class VmessBackend:
             channel.queue_declare("vmess_queue")
             gs = GroupSelector("add user")
             group = gs.group
-            nw = NodeWriter(group.tag, group.index)
+            nw = CustomWriter(group.tag, group.index)
             info = {"email": user_info}
-            nw.create_new_user(**info)
-            sleep(5)
-            password = self.user_exists(user_info)["node"].password
+            password = nw.create_new_user(**info).hex
             data = {
                 "user_info": user_info,
                 "password": password,
