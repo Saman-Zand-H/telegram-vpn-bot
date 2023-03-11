@@ -301,7 +301,7 @@ class VmessBackend:
             nw = NodeWriter(group.tag, group.index)
             info = {"email": user_info}
             nw.create_new_user(**info)
-            sleep(3)
+            sleep(5)
             password = self.user_exists(user_info)["node"].password
             data = {
                 "user_info": user_info,
