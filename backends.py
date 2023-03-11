@@ -8,7 +8,6 @@ from v2ray_util.global_setting.stats_ctr import Loader, StatsFactory
 from v2ray_util.util_core.writer import NodeWriter
 from v2ray_util.util_core.selector import GroupSelector
 from itertools import chain, groupby
-from time import sleep
 from typing import List
 from logging import getLogger
 from operator import attrgetter
@@ -331,8 +330,8 @@ class VmessBackend:
                 routing_key="vmess_queue",
                 body=json.dumps(data)
             )
-            return True
-        return user
+            return password
+        return user["node"].password
     
     def delete_user(self, user_info):
         profile = Loader().profile

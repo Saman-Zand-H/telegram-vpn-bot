@@ -1,5 +1,5 @@
 ##### For usage on other servers.
-import pika, json
+import pika, json, os
 from v2ray_util.util_core.writer import NodeWriter
 from v2ray_util.util_core.selector import GroupSelector
 from v2ray_util.util_core.loader import Loader
@@ -23,7 +23,16 @@ class CustomWriter(NodeWriter):
         self.save()
 
 
-connection = pika.BlockingConnection(pika.ConnectionParameters())
+pika_credentials = pika.PlainCredentials(username="djsadmin",
+                                         password=os.environ.get("RABBIT_PASSWORD"),
+                                         erase_on_connect=True)
+connection = pika.BlockingConnection(
+    pika.ConnectionParameters(
+        host=os.environ.get("SERVER_IP"),
+        port=5672,
+        virtual_host="tel_broker",
+        credentials=pika_credentials
+    ))
 channel = connection.channel()
 
 def vmess_consumer(ch, method, properties, body):
