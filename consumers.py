@@ -46,8 +46,11 @@ def vmess_consumer(ch, method, properties, body):
                 gs = GroupSelector("add user")
                 group = gs.group
                 nw = CustomWriter(group.tag, group.index)
-                nw.create_new_user(kw={"email": user_info, "password": password})
-                print("[+] User created.")
+                try:
+                    nw.create_new_user(kw={"email": user_info, "password": password})
+                    print("[+] User created.")
+                except:
+                    ...
                 
             case "delete":
                 profile = Loader().profile

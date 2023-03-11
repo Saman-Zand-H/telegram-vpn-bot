@@ -232,6 +232,21 @@ class VmessBackend:
     def __init__(self):
         self._loader = Loader()
         self._profile = self._loader.profile
+        self._sync_servers()
+        
+    def _sync_servers(self):
+        for user in self.list_users():
+            data = {
+                "user_info": user["user_info"],
+                "password": user["password"],
+                "type": "new"
+            }
+            channel.queue_declare("vmess_queue")
+            channel.basic_publish(
+                exchange="",
+                routing_key="vmess_queue",
+                body=json.dumps(data)
+            )
 
     def _retrieve_nodes(self):
         nodes = [
