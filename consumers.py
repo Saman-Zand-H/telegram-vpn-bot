@@ -1,3 +1,4 @@
+#!/usr/bin/python3.10
 ##### For usage on other servers.
 import pika, json, os
 from v2ray_util.util_core.writer import NodeWriter

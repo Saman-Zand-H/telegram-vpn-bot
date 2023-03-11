@@ -1,3 +1,5 @@
+#!/usr/bin/python3.10
+
 import json, base64, sys, hashlib, shutil, subprocess, shlex, pika, os
 from uuid import uuid4
 from collections import deque
