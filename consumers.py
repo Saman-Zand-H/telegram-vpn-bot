@@ -52,13 +52,18 @@ def vmess_consumer(ch, method, properties, body):
                 profile = Loader().profile
                 user_number = body["user_number"]
                 group = profile.group_list[0]
+                client_index = None
                 for index, node in enumerate(group.node_list):
                     if node.user_number == user_number:
                         client_index = index
                         break
                 nw = NodeWriter()
-                nw.del_user(group, client_index)
-                print("[+] User deleted.")
+                if client_index is not None:
+                    try:
+                        nw.del_user(group, client_index)
+                        print("[+] User deleted.")
+                    except:
+                        ...
                 
     except json.JSONDecodeError:
         ...
