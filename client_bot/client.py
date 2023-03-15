@@ -1,19 +1,20 @@
 import os, json
+from pathlib import Path
 from logging import getLogger
 from datetime import datetime, timedelta
 from asgiref.sync import sync_to_async
 from itertools import chain
-from models import Base, Users, Offers, Guests, UsersOffersLink, SSHUsers
+from .models import Base, Users, Offers, Guests, UsersOffersLink, SSHUsers
 from asyncio import sleep
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from utils import (
+from .utils import (
     generate_trojan_str,
     generate_password,
     trunc_number,
     login_required
 )
-from backends import (
+from .backends import (
     TrojanBackend,
     VmessBackend,
     SSHBackend
@@ -32,7 +33,7 @@ from telegram.ext import (
 
 logger = getLogger(__name__)
 token = os.environ.get("BOT_TOKEN")
-bot_name = "vpn_bot only"
+bot_name = "mms vpn bot".title()
 DB_PATH = "/root/telbot/data.db"
 DOMAINS = ["whitelli.tk", "blackelli.duckdns.org"]
 engine = create_engine(f"sqlite+pysqlite:////{DB_PATH}", echo=True)
@@ -112,13 +113,18 @@ async def auth(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return GUEST_MENU
         case "clients":
+            cwd = Path.cwd()
             await update.message.reply_text("For android:")
+            
             await update.message.reply_chat_action("upload_document")
-            await update.message.reply_document("/root/telbot/HTTPInjector5.9.1.apk")
+            await update.message.reply_document(cwd.joinpath("HTTPInjector5.9.1.apk"))
+            
             await update.message.reply_chat_action("upload_document")
-            await update.message.reply_document("/root/telbot/NapsternetV53.0.0.apk")
+            await update.message.reply_document(cwd.joinpath("NapsternetV53.0.0.apk"))
+            
             await update.message.reply_chat_action("upload_document")
-            await update.message.reply_document("/root/telbot/v2rayng1.7.38.apk")
+            await update.message.reply_document(cwd.joinpath("v2rayng1.7.38.apk"))
+            
             await update.message.reply_text(
                 "Note that you can use V2RayNG for Vmess and Vless and Trojan configs, "
                 "you can also use NapsternetV for Vmess and Vless configs, "
@@ -506,7 +512,7 @@ def main():
                 )
             ],
         },
-        name="telegram_bot",
+        name="mms_vpn_bot",
         persistent=True,
         fallbacks=[MessageHandler(filters.ALL, start)],
     )

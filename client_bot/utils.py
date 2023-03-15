@@ -6,14 +6,16 @@ from codecs import encode
 from logging import getLogger
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Users
+from client_bot.models import Users, Admins
+    
+    
+engine = create_engine("sqlite+pysqlite:////root/telbot/data.db")
     
     
 def login_required(function):
     @wraps(function)
     async def wrapper(update: Update, context: ContextTypes):
         username = update.effective_user.username
-        engine = create_engine("sqlite+pysqlite:////root/telbot/data.db")
         Session = sessionmaker(bind=engine)()
         user = Session.query(Users).filter(Users.username==username)
         if user.scalar():
@@ -22,6 +24,19 @@ def login_required(function):
         return chr(0)
     return wrapper
 
+
+def is_admin(function):
+    @wraps(function)
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        Session = sessionmaker(bind=engine)()
+        username = update.effective_user.username
+        user_qs = Session.query(Admins.username).filter(Admins.username==username)
+        if user_qs.scalar():
+            return await function(update, context)
+        await update.message.reply_text("Get the fuck out of here junky!")
+        return chr(0)
+    return wrapper
+        
 
 def random_str(length=7):
     return "".join(random.choices(string.ascii_letters, k=length))

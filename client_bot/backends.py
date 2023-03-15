@@ -1,11 +1,12 @@
 #!/usr/bin/python3.10
 
-import json, base64, sys, hashlib, shutil, subprocess, shlex, pika, os
+import json, base64, sys, hashlib, shutil
+import subprocess, shlex, pika, os, crypt
 from uuid import uuid4
 from collections import deque
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import TrojanUsers, MySqlBase, Offers, Users, SSHUsers
+from client_bot.models import TrojanUsers, MySqlBase, Offers, Users, SSHUsers
 from v2ray_util.global_setting.stats_ctr import Loader, StatsFactory
 from v2ray_util.util_core.writer import NodeWriter
 from v2ray_util.util_core.selector import GroupSelector
@@ -14,7 +15,7 @@ from typing import List
 from logging import getLogger
 from operator import attrgetter
 from datetime import date
-from utils import random_str
+from client_bot.utils import random_str
 
 
 logger = getLogger(__name__)
@@ -437,6 +438,9 @@ class SSHBackend:
     def __init__(self):
         self.engine = TrojanBackend().engine
         self.Session = sessionmaker(bind=self.engine)()
+        self.del_cmd = "userdel -f -r {username}"
+        self.new_cmd = "useradd -p {enc_password} {username}"
+        self.exists_cmd = "id {username}"
         
     def user_exists(self, username):
         qs = self.Session.query(SSHUsers).filter(SSHUsers.username==username)
@@ -445,6 +449,42 @@ class SSHBackend:
             if qs.scalar()
             else False
         )
+        
+    def linux_user_exists(self, username):
+        return "no such user" not in subprocess.check_output(
+            shlex.split(self.exists_cmd))
+        
+    def new_user(self, username, password):
+        if not self.linux_user_exists(username):
+            channel.queue_declare("ssh_queue")
+            salt = crypt.mksalt(crypt.METHOD_SHA512)
+            enc_password = crypt.crypt(password, salt)
+            data = {
+                "type": "new",
+                "username": username,
+                "password": password
+            }
+            channel.basic_publish(
+                exchange="",
+                routing_key="ssh_queue",
+                body=json.dumps(data)
+            )
+            subprocess.run(shlex.split(self.new_cmd))
+        return password
+    
+    def delete_user(self, username):
+        if self.linux_user_exists(username):
+            channel.queue_declare("ssh_queue")
+            subprocess.run(shlex.split(self.del_cmd))
+            data = {
+                "type": "delete",
+                "username": username
+            }
+            channel.basic_publish(
+                exchange="",
+                routing_key="ssh_queue",
+                body=json.dumps(data)
+            )
         
     def get_stats(self, username):
         if (user:=self.user_exists(username)):

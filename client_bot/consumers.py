@@ -1,6 +1,6 @@
 #!/usr/bin/python3.10
 ##### For usage on other servers.
-import pika, json, os
+import pika, json, os, crypt, shlex, subprocess
 from v2ray_util.util_core.writer import NodeWriter
 from v2ray_util.util_core.selector import GroupSelector
 from v2ray_util.util_core.loader import Loader
@@ -68,14 +68,48 @@ def vmess_consumer(ch, method, properties, body):
                         print("[+] User deleted.")
                     except:
                         ...
+            
+            case _:
+                ...
                 
     except json.JSONDecodeError:
+        ...
+
+
+def ssh_consumer(ch, method, properties, body):
+    def user_exists(username):
+        cmd = shlex.split(f"id {username}")
+        return "no such user" not in subprocess.check_output(cmd).decode()
+    
+    try:
+        data = json.loads(body)
+        username = data.get("username")
+        match data.get("type"):
+            case "new":
+                if not user_exists(username):
+                    password = data.get("password")
+                    salt = crypt.mksalt(crypt.METHOD_SHA512)
+                    enc_password = crypt.crypt(password, salt)
+                    cmd = shlex.split(f"useradd -p {enc_password} {username}")
+                    subprocess.run(cmd)
+                    
+            case "delete":
+                if user_exists(username):
+                    cmd = shlex.split(f"userdel -f -r {username}")
+                    subprocess.run(cmd)
+                    
+            case _:
+                ...
+    except:
         ...
 
 
 if __name__ == "__main__":
     channel.basic_consume("vmess_queue",
                           vmess_consumer,
+                          True)
+    channel.basic_consume("ssh_queue",
+                          ssh_consumer,
                           True)
     print("[+] Cosumer is about to set up...")
     channel.start_consuming()

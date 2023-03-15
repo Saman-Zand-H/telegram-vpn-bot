@@ -25,6 +25,13 @@ class V2RayProtocolEnum(enum.Enum):
     vless = "vless"
 
 
+class Admins(Base):
+    __tablename__ = "admins"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, index=True)
+    username = Column(String, nullable=False, unique=True)
+
+
 class Offers(Base):
     __tablename__ = "offers"
     id = Column(Integer, primary_key=True)
